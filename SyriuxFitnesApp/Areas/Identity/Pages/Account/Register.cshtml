@@ -1,0 +1,122 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <h2 class="text-center">Syriux Fitness'a Katıl</h2>
+            <hr />
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Input.FirstName" class="form-control" placeholder="Ad" />
+                        <label asp-for="Input.FirstName">Ad</label>
+                        <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Input.LastName" class="form-control" placeholder="Soyad" />
+                        <label asp-for="Input.LastName">Soyad</label>
+                        <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Input.Height" class="form-control" placeholder="Boy (cm)" />
+                        <label asp-for="Input.Height">Boy (cm)</label>
+                        <span asp-validation-for="Input.Height" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Input.Weight" class="form-control" placeholder="Kilo (kg)" />
+                        <label asp-for="Input.Weight">Kilo (kg)</label>
+                        <span asp-validation-for="Input.Weight" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.BirthDate" class="form-control" type="date" />
+                <label asp-for="Input.BirthDate">Doğum Tarihi</label>
+                <span asp-validation-for="Input.BirthDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <select asp-for="Input.Gender" class="form-select">
+                    <option value="">Cinsiyet Seçiniz...</option>
+                    <option value="Erkek">Erkek</option>
+                    <option value="Kadın">Kadın</option>
+                </select>
+                <label asp-for="Input.Gender">Cinsiyet</label>
+                <span asp-validation-for="Input.Gender" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <select asp-for="Input.FitnessGoal" class="form-select">
+                    <option value="">Fitness Hedefiniz Nedir?</option>
+                    <option value="Kilo Verme">Kilo Verme (Yağ Yakımı)</option>
+                    <option value="Hacim Kazanma">Hacim Kazanma (Kas Kütlesi)</option>
+                    <option value="Güçlenme">Güçlenme (Powerlifting)</option>
+                    <option value="Kondisyon">Kondisyon ve Sağlık</option>
+                </select>
+                <label asp-for="Input.FitnessGoal">Fitness Hedefi</label>
+                <span asp-validation-for="Input.FitnessGoal" class="text-danger"></span>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <label asp-for="Input.Email">Email Adresi</label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password">Şifre</label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.ConfirmPassword">Şifre Tekrar</label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Kayıt Ol</button>
+        </form>
+
+        <div class="mt-3 text-center">
+            <section>
+                @{
+                    if ((Model.ExternalLogins?.Count ?? 0) > 0)
+                    {
+                        <hr />
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                            <div>
+                                <p>
+                                    @foreach (var provider in Model.ExternalLogins!)
+                                    {
+                                        <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                    }
+                                </p>
+                            </div>
+                        </form>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

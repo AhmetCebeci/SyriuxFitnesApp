@@ -1,0 +1,66 @@
+﻿@model SyriuxFitnesApp.Models.Appointment
+
+@{
+    ViewData["Title"] = "Randevu Al";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Yeni Randevu Oluştur</h3>
+                </div>
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Create">
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ServiceId" class="control-label fw-bold">Hizmet Türü</label>
+                            <select asp-for="ServiceId" class="form-control form-select" asp-items="ViewBag.ServiceId">
+                                <option value="">-- Hizmet Seçiniz --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="TrainerId" class="control-label fw-bold">Antrenör</label>
+                            <select asp-for="TrainerId" class="form-control form-select" asp-items="ViewBag.TrainerId">
+                                <option value="">-- Antrenör Seçiniz --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AppointmentDate" class="control-label fw-bold">Randevu Tarihi</label>
+                            <input asp-for="AppointmentDate" class="form-control" type="date"
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")" /> <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AppointmentTime" class="control-label fw-bold">Randevu Saati</label>
+                            <input asp-for="AppointmentTime" class="form-control" type="time" step="900" />
+                            <small class="text-muted">Lütfen saati seçiniz (Örn: 14:00, 14:15)</small>
+                            <span asp-validation-for="AppointmentTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4 d-grid gap-2">
+                            <input type="submit" value="Randevuyu Kaydet" class="btn btn-success btn-lg" />
+                            <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
