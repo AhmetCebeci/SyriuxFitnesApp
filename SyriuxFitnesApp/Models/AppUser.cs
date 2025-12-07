@@ -41,6 +41,6 @@ namespace SyriuxFitnesApp.Models
         [Display(Name = "Fitness Hedefi")]
         [Required(ErrorMessage = "Bir hedef belirlemelisiniz (Örn: Kilo Verme,Hacim Kazanma vs).")]
         [StringLength(100, ErrorMessage = "Hedef açıklaması çok uzun.")]
-        public string? FitnessGoal { get; set; } // Örn: Kilo Verme, Hacim Kazanma vs
+        public string? FitnessGoal { get; set; } // Örn: Kilo Verme, Hacim Kazanma vs.
     }
 }

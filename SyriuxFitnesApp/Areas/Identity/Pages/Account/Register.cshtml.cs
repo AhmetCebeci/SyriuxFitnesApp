@@ -92,10 +92,12 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
             // --- 1. Katman Doğrulama (Attribute Validation) ---
 
             [Required(ErrorMessage = "Ad alanı zorunludur.")]
+            [StringLength(50, MinimumLength = 2, ErrorMessage = "Ad en az 2, en fazla 50 karakter olmalıdır.")]
             [Display(Name = "Ad")]
             public string FirstName { get; set; }
 
             [Required(ErrorMessage = "Soyad alanı zorunludur.")]
+            [StringLength(50, MinimumLength = 2, ErrorMessage = "Soyad en az 2, en fazla 50 karakter olmalıdır.")]
             [Display(Name = "Soyad")]
             public string LastName { get; set; }
 
@@ -129,7 +131,7 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "Şifre en az {2} karakter olmalı.", MinimumLength = 6)]
+            [StringLength(10, ErrorMessage = "Şifre en az {2}, en fazla {1} karakter olmalı.", MinimumLength = 3)]
             [DataType(DataType.Password)]
             [Display(Name = "Şifre")]
             public string Password { get; set; }
@@ -198,14 +200,19 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
                     return Page();
                 }
 
-                // Hata 2: Yaş Sınırı (Örn: 12 yaşından küçükler kayıt olamaz)
+                // Hata 2: Yaş Sınırı (Örn: 12 yaşından küçükler ve 100 yaşından büyükler kayıt olamaz)
                 var today = DateTime.Today;
                 var age = today.Year - Input.BirthDate.Value.Year;
                 if (Input.BirthDate.Value.Date > today.AddYears(-age)) age--;
 
                 if (age < 12)
                 {
-                    ModelState.AddModelError(string.Empty, "Hata: Kayıt olmak için en az 12 yaşında olmalısınız.");
+                    ModelState.AddModelError(string.Empty, "Hata: Kayıt olmak için en az 12 yaşında olmalısınız.");//12 yaşından küçükse hata ver.
+                    return Page();
+                }
+                else if (age > 100) // 100 yaşından büyükse hata ver.
+                {
+                    ModelState.AddModelError(string.Empty, "Hata: Lütfen geçerli bir doğum yılı giriniz.");
                     return Page();
                 }
                 // -----------------------------------------------------
