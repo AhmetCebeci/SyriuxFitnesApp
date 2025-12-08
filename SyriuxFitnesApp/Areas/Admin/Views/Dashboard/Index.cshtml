@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Yönetim Paneli";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Admin Dashboard</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3 shadow-sm">
+                <div class="card-header">Toplam Üye</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6 fw-bold">0</h5>
+                    <p class="card-text small">Sisteme kayıtlı aktif üye sayısı.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3 shadow-sm">
+                <div class="card-header">Antrenörler</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6 fw-bold">0</h5>
+                    <p class="card-text small">Hizmet veren eğitmen sayısı.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-warning text-dark mb-3 shadow-sm">
+                <div class="card-header">Bekleyen Randevular</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6 fw-bold">0</h5>
+                    <p class="card-text small">Onay bekleyen randevu talebi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h3>Hızlı Yönetim</h3>
+            <div class="list-group mt-3 shadow-sm">
+
+                <a asp-controller="Service" asp-action="Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <i class="bi bi-activity text-primary me-2"></i>
+                        <strong>Hizmet (Servis) Yönetimi</strong> <br>
+                        <small class="text-muted">Spor salonu hizmetlerini ekle, sil veya fiyatlarını güncelle.</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill"><i class="bi bi-arrow-right"></i></span>
+                </a>
+
+                <a asp-controller="Trainer" asp-action="Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <i class="bi bi-person-badge text-success me-2"></i>
+                        <strong>Antrenör Yönetimi</strong> <br>
+                        <small class="text-muted">Eğitmenleri sisteme tanımla ve uzmanlıklarını belirle.</small>
+                    </div>
+                    <span class="badge bg-success rounded-pill"><i class="bi bi-arrow-right"></i></span>
+                </a>
+
+                <a asp-controller="Appointment" asp-action="Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <i class="bi bi-calendar-check text-warning me-2"></i>
+                        <strong>Randevu Onay Ekranı</strong> <br>
+                        <small class="text-muted">Gelen randevu taleplerini incele ve onayla.</small>
+                    </div>
+                    <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-arrow-right"></i></span>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>

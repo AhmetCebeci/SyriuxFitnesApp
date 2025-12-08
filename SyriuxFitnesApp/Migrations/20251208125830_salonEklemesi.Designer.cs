@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyriuxFitnesApp.Data;
 
@@ -11,9 +12,11 @@ using SyriuxFitnesApp.Data;
 namespace SyriuxFitnesApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251208125830_salonEklemesi")]
+    partial class salonEklemesi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,12 +278,6 @@ namespace SyriuxFitnesApp.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("StoredDuration")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("StoredPrice")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("TrainerId")
                         .HasColumnType("int");
 
@@ -378,21 +375,6 @@ namespace SyriuxFitnesApp.Migrations
                     b.ToTable("Trainers");
                 });
 
-            modelBuilder.Entity("SyriuxFitnesApp.Models.TrainerService", b =>
-                {
-                    b.Property<int>("TrainerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TrainerId", "ServiceId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("TrainerService");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -469,35 +451,9 @@ namespace SyriuxFitnesApp.Migrations
                     b.Navigation("Trainer");
                 });
 
-            modelBuilder.Entity("SyriuxFitnesApp.Models.TrainerService", b =>
-                {
-                    b.HasOne("SyriuxFitnesApp.Models.Service", "Service")
-                        .WithMany("TrainerServices")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SyriuxFitnesApp.Models.Trainer", "Trainer")
-                        .WithMany("TrainerServices")
-                        .HasForeignKey("TrainerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Service");
-
-                    b.Navigation("Trainer");
-                });
-
-            modelBuilder.Entity("SyriuxFitnesApp.Models.Service", b =>
-                {
-                    b.Navigation("TrainerServices");
-                });
-
             modelBuilder.Entity("SyriuxFitnesApp.Models.Trainer", b =>
                 {
                     b.Navigation("Appointments");
-
-                    b.Navigation("TrainerServices");
                 });
 #pragma warning restore 612, 618
         }

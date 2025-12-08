@@ -24,12 +24,11 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
         private readonly UserManager<AppUser> _userManager; // Rol kontrolü için gerekli
         private readonly ILogger<LoginModel> _logger;
 
-        
         public LoginModel(SignInManager<AppUser> signInManager, ILogger<LoginModel> logger, UserManager<AppUser> userManager)
         {
             _signInManager = signInManager;
             _logger = logger;
-            _userManager = userManager; 
+            _userManager = userManager;
         }
 
         [BindProperty]
@@ -77,51 +76,49 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
-
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (ModelState.IsValid)
             {
-                // Giriş denemesi yapılıyor
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                // --- ADIM 1: KULLANICIYI BUL VE ROL KONTROLÜ YAP ---
+                var user = await _userManager.FindByEmailAsync(Input.Email);
 
+                if (user != null)
+                {
+                    // Eğer kullanıcı ADMIN ise, "Beni Hatırla"yı zorla KAPAT.
+                    // Böylece tarayıcı kapanınca oturum silinir.
+                    if (await _userManager.IsInRoleAsync(user, "Admin"))
+                    {
+                        Input.RememberMe = false;
+                    }
+                }
+                // ----------------------------------------------------
+
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // --- YÖNLENDİRME ---
-
-                    // 1. Giriş yapan kullanıcıyı bul
-                    var user = await _userManager.FindByEmailAsync(Input.Email);
-
-                    // 2. Rolünü kontrol et
+                    // --- ADIM 2: YÖNLENDİRME ---
                     if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
                     {
-                        // Admin ise --> Admin Paneline yönlendir                        
+                        // Admin ise Panele gönder
                         return RedirectToAction("Index", "Dashboard", new { Area = "Admin" });
                     }
 
-                    // Admin değilse (Member ise) --> Kaldığı yerden devam etsin veya anasayfaya gitsin
-                    return LocalRedirect(returnUrl);
-                    // -------------------
+                    // Member ise normal akışa devam et
+                    return LocalRedirect(returnUrl); 
                 }
-
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
+                
+                if (result.RequiresTwoFactor){} 
+                if (result.IsLockedOut){}
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Giriş başarısız. Email veya şifre hatalı.");
                     return Page();
                 }
             }
-
             return Page();
         }
     }

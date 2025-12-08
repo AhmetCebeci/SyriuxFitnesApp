@@ -20,10 +20,15 @@
                     <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
 
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                <div class="form-floating mb-2">
+                    <input asp-for="Input.Password" class="form-control" id="passwordInput" autocomplete="current-password" aria-required="true" placeholder="password" />
                     <label asp-for="Input.Password">Şifre</label>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="showPassCheckbox" onclick="togglePassword()">
+                    <label class="form-check-label text-muted small" for="showPassCheckbox">Şifreyi Göster</label>
                 </div>
 
                 <div class="checkbox mb-3">
@@ -42,7 +47,6 @@
                         Hesabın yok mu? <br />
                         <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none fw-bold fs-5">Hemen Kayıt Ol</a>
                     </p>
-
                 </div>
             </form>
         </section>
@@ -68,6 +72,17 @@
         }
     </div>
 </div>
+
+<script>
+    function togglePassword() {
+        var x = document.getElementById("passwordInput");
+        if (x.type === "password") {
+            x.type = "text";
+        } else {
+            x.type = "password";
+        }
+    }
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

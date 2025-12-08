@@ -28,6 +28,8 @@ namespace SyriuxFitnesApp.Models
 
 
         // İlişkiler
+        // Bir antrenörün birden fazla hizmeti olabilir
+        public ICollection<TrainerService>? TrainerServices { get; set; }
         public ICollection<Appointment>? Appointments { get; set; }
     }
 }

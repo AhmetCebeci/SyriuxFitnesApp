@@ -19,5 +19,9 @@ namespace SyriuxFitnesApp.Models
         [Required]
         [Range(0, 10000, ErrorMessage = "Geçerli bir ücret giriniz.")]
         public decimal Price { get; set; }
+
+        // İlişkiler
+        // Bir hizmeti birden fazla antrenör verebilir
+        public ICollection<TrainerService>? TrainerServices { get; set; }
     }
 }
