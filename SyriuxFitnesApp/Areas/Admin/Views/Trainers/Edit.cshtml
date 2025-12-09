@@ -1,0 +1,91 @@
+﻿@model SyriuxFitnesApp.Models.Trainer
+
+@{
+    ViewData["Title"] = "Antrenörü Düzenle";
+    var services = ViewBag.Services as List<SyriuxFitnesApp.Models.Service>;
+    var selectedIds = ViewBag.SelectedServiceIds as List<int>;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Antrenör Bilgilerini Düzenle</h4>
+                </div>
+                <div class="card-body bg-white">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="TrainerId" />
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label fw-bold">Ad Soyad</label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Expertise" class="form-label fw-bold">Unvan / Uzmanlık</label>
+                            <input asp-for="Expertise" class="form-control" />
+                            <span asp-validation-for="Expertise" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="WorkStartHour" class="form-label fw-bold">Mesai Başlangıç</label>
+                                <input asp-for="WorkStartHour" class="form-control" type="number" />
+                                <span asp-validation-for="WorkStartHour" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="WorkEndHour" class="form-label fw-bold">Mesai Bitiş</label>
+                                <input asp-for="WorkEndHour" class="form-control" type="number" />
+                                <span asp-validation-for="WorkEndHour" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-header fw-bold">Verdiği Hizmetleri Güncelle</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @if (services != null)
+                                    {
+                                        foreach (var service in services)
+                                        {
+                                            // Bu servis daha önce seçilmiş mi kontrol et
+                                            bool isChecked = selectedIds != null && selectedIds.Contains(service.ServiceId);
+
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           name="selectedServices"
+                                                           value="@service.ServiceId"
+                                                           id="srv_@service.ServiceId"
+                                                           @(isChecked ? "checked" : "")>
+                                                    <label class="form-check-label" for="srv_@service.ServiceId">
+                                                        @service.ServiceName
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <small class="text-muted fst-italic mt-2 d-block">Not: Bir hizmetin işaretini kaldırırsanız, antrenör artık o dersi veremez ancak geçmiş randevular silinmez.</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">İptal</a>
+                            <button type="submit" class="btn btn-warning text-dark px-4">Değişiklikleri Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

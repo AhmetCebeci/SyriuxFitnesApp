@@ -1,0 +1,70 @@
+﻿@model IEnumerable<SyriuxFitnesApp.Models.Trainer>
+
+@{
+    ViewData["Title"] = "Antrenörler";
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="bg-white rounded h-100 p-4 shadow-sm">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="mb-0 fs-4">Antrenör Yönetimi</h6>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-person-plus-fill"></i> Yeni Antrenör Ekle
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.DisplayNameFor(model => model.FullName)</th>
+                        <th>@Html.DisplayNameFor(model => model.Expertise)</th>
+                        <th>Verdiği Dersler</th>
+                        <th>Çalışma Saatleri</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">
+                                <i class="bi bi-person-circle text-success me-2"></i> @Html.DisplayFor(modelItem => item.FullName)
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    @Html.DisplayFor(modelItem => item.Expertise)
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.TrainerServices != null && item.TrainerServices.Any())
+                                {
+                                    @foreach (var ts in item.TrainerServices)
+                                    {
+                                        <span class="badge bg-info text-dark me-1">@ts.Service.ServiceName</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <small class="text-muted">Hizmet Yok</small>
+                                }
+                            </td>
+                            <td>
+                                <i class="bi bi-clock"></i> @item.WorkStartHour:00 - @item.WorkEndHour:00
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@item.TrainerId" class="btn btn-sm btn-outline-warning me-2">
+                                    <i class="bi bi-pencil-square"></i> Düzenle
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.TrainerId" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Sil
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -84,9 +84,7 @@
         <div class="navbar-nav">
             <div class="nav-item text-nowrap">
                 <form class="form-inline px-3" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
-                    <button type="submit" class="logout-btn">
-                        <i class="bi bi-box-arrow-right"></i> Çıkış Yap
-                    </button>
+                    <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Çıkış Yap</button>
                 </form>
             </div>
         </div>
@@ -97,23 +95,33 @@
             <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
+
                         <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Service" ? "active" : "")" asp-area="Admin" asp-controller="Service" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Salons" ? "active" : "")" asp-area="Admin" asp-controller="Salons" asp-action="Index">
+                                <i class="bi bi-building"></i> Salon Bilgileri
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Services" ? "active" : "")" asp-area="Admin" asp-controller="Services" asp-action="Index">
                                 <i class="bi bi-activity"></i> Hizmet Yönetimi
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Trainer" ? "active" : "")" asp-area="Admin" asp-controller="Trainer" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Trainers" ? "active" : "")" asp-area="Admin" asp-controller="Trainers" asp-action="Index">
                                 <i class="bi bi-person-badge"></i> Antrenör Yönetimi
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Appointment" ? "active" : "")" asp-area="Admin" asp-controller="Appointment" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Appointments" ? "active" : "")" asp-area="Admin" asp-controller="Appointments" asp-action="Index">
                                 <i class="bi bi-calendar-check"></i> Randevu Onay
                             </a>
                         </li>

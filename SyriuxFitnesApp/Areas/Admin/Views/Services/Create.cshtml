@@ -1,0 +1,66 @@
+﻿@model SyriuxFitnesApp.Models.Service
+
+@{
+    ViewData["Title"] = "Yeni Hizmet Ekle";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle-fill"></i> Yeni Hizmet Ekle</h4>
+                </div>
+                <div class="card-body bg-white">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="ServiceName" class="form-label fw-bold">Hizmet Adı</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-activity"></i></span>
+                                <input asp-for="ServiceName" class="form-control" placeholder="Örn: Yoga, Pilates" />
+                            </div>
+                            <span asp-validation-for="ServiceName" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DurationMinutes" class="form-label fw-bold">Süre (Dakika)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                                    <input asp-for="DurationMinutes" class="form-control" placeholder="Lütfen süreyi 15-120 dk arası giriniz." />
+                                </div>
+                                <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price" class="form-label fw-bold">Ücret (TL)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">₺</span>
+                                    <input asp-for="Price" class="form-control" placeholder="Lütfen ücreti 0-10000 arası giriniz." />
+                                </div>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Listeye Dön
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

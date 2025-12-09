@@ -18,6 +18,8 @@ namespace SyriuxFitnesApp.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Salon> Salons { get; set; }
 
+        public DbSet<TrainerService> TrainerServices { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

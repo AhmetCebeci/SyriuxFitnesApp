@@ -64,15 +64,25 @@
             <div class="form-floating mb-3">
                 <select asp-for="Input.FitnessGoal" class="form-select">
                     <option value="">Fitness Hedefiniz Nedir?</option>
+
                     <option value="Kilo Verme">Kilo Verme (Yağ Yakımı)</option>
                     <option value="Hacim Kazanma">Hacim Kazanma (Kas Kütlesi)</option>
-                    <option value="Güçlenme">Güçlenme (Powerlifting / Kuvvet)</option>
-                    <option value="Kondisyon">Kondisyon ve Kalp Sağlığı</option>
+                    <option value="Güç ve Kuvvet">Güç ve Kuvvet (Powerlifting)</option>
+                    <option value="Vücut Şekillendirme">Vücut Şekillendirme (Sıkılaşma/Toning)</option>
+
+                    <option value="Dayanıklılık">Dayanıklılık ve Kondisyon (Kardiyo)</option>
                     <option value="Atletik Performans">Atletik Performans</option>
-                    <option value="Esneklik ve Denge">Esneklik ve Denge</option>
                     <option value="Yarışma Hazırlığı">Yarışma Hazırlığı</option>
-                    <option value="Sağlıklı Yaşam">Sağlıklı Yaşam</option>
-                    <option value="Rehabilitasyon">Rehabilitasyon</option>
+
+                    <option value="Sağlıklı Yaşam">Sağlıklı Yaşam ve Form Koruma</option>
+                    <option value="Esneklik ve Mobilite">Esneklik ve Mobilite (Yoga/Pilates)</option>
+                    <option value="Postür Düzeltme">Postür (Duruş) Düzeltme</option>
+                    <option value="Stres Yönetimi">Stres Atma ve Zihinsel Rahatlama</option>
+
+                    <option value="Karın Kası Odaklı">Karın Kası (Core) Odaklı</option>
+                    <option value="Rehabilitasyon">Rehabilitasyon (Fizik Tedavi Sonrası)</option>
+                    <option value="Beslenme Odaklı">Beslenme ve Diyet Odaklı</option>
+                    <option value="Yeni Başlayan">Spora Yeni Başlayan (Adaptasyon)</option>
                 </select>
                 <label asp-for="Input.FitnessGoal">Fitness Hedefi</label>
                 <span asp-validation-for="Input.FitnessGoal" class="text-danger"></span>

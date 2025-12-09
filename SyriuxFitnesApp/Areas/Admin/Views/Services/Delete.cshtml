@@ -1,0 +1,63 @@
+﻿@model SyriuxFitnesApp.Models.Service
+
+@{
+    ViewData["Title"] = "Hizmeti Sil";
+    int randevuSayisi = ViewBag.AppointmentCount ?? 0;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Silme Onayı</h4>
+                </div>
+                <div class="card-body">
+
+                    <h5 class="card-title text-center mb-4">
+                        <span class="fw-bold text-danger">@Model.ServiceName</span> hizmetini silmek istediğinize emin misiniz?
+                    </h5>
+
+                    @if (randevuSayisi > 0)
+                    {
+                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                            <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                            <div>
+                                <strong>DİKKAT:</strong> Bu hizmete ait <strong>@randevuSayisi</strong> adet kayıtlı randevu bulunmaktadır.
+                                <br />
+                                <span class="text-decoration-underline">Eğer silerseniz, bu randevular da sistemden silinecektir!</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info" role="alert">
+                            Bu hizmete bağlı aktif randevu bulunmamaktadır. Güvenle silebilirsiniz.
+                        </div>
+                    }
+
+                    <dl class="row mt-3">
+                        <dt class="col-sm-4">Süre:</dt>
+                        <dd class="col-sm-8">@Model.DurationMinutes Dakika</dd>
+
+                        <dt class="col-sm-4">Ücret:</dt>
+                        <dd class="col-sm-8">@Model.Price ₺</dd>
+                    </dl>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="ServiceId" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash-fill"></i> Evet, Hizmeti Sil
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
