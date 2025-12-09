@@ -68,12 +68,11 @@
                     <option value="Hacim Kazanma">Hacim Kazanma (Kas Kütlesi)</option>
                     <option value="Güçlenme">Güçlenme (Powerlifting / Kuvvet)</option>
                     <option value="Kondisyon">Kondisyon ve Kalp Sağlığı</option>
-
-                    <option value="Atletik Performans">Atletik Performans (Hız ve Çeviklik)</option>
-                    <option value="Esneklik ve Denge">Esneklik ve Denge (Yoga / Pilates)</option>
-                    <option value="Yarışma Hazırlığı">Yarışma Hazırlığı (Vücut Geliştirme)</option>
-                    <option value="Sağlıklı Yaşam">Sadece Sağlıklı Yaşam (Fit Kalmak)</option>
-                    <option value="Rehabilitasyon">Sakatlık Sonrası / Fizik Tedavi</option>
+                    <option value="Atletik Performans">Atletik Performans</option>
+                    <option value="Esneklik ve Denge">Esneklik ve Denge</option>
+                    <option value="Yarışma Hazırlığı">Yarışma Hazırlığı</option>
+                    <option value="Sağlıklı Yaşam">Sağlıklı Yaşam</option>
+                    <option value="Rehabilitasyon">Rehabilitasyon</option>
                 </select>
                 <label asp-for="Input.FitnessGoal">Fitness Hedefi</label>
                 <span asp-validation-for="Input.FitnessGoal" class="text-danger"></span>
@@ -86,15 +85,22 @@
                 <label asp-for="Input.Email">Email Adresi</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
+
             <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <input asp-for="Input.Password" class="form-control" id="passInput" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label asp-for="Input.Password">Şifre</label>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+
+            <div class="form-floating mb-2">
+                <input asp-for="Input.ConfirmPassword" class="form-control" id="confPassInput" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label asp-for="Input.ConfirmPassword">Şifre Tekrar</label>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="showPass" onclick="togglePasswords()">
+                <label class="form-check-label text-muted small" for="showPass">Şifreleri Göster</label>
             </div>
 
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Kayıt Ol</button>
@@ -122,6 +128,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePasswords() {
+        var p1 = document.getElementById("passInput");
+        var p2 = document.getElementById("confPassInput");
+
+        if (p1.type === "password") {
+            p1.type = "text";
+            p2.type = "text";
+        } else {
+            p1.type = "password";
+            p2.type = "password";
+        }
+    }
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
