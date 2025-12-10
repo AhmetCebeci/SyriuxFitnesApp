@@ -127,7 +127,6 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            // BURADA DEĞİŞİKLİK YAPTIK:
             // İlişkili randevuları (Appointments) da çekiyoruz ki sayısını görelim.
             var service = await _context.Services
                 .Include(s => s.Appointments)
@@ -149,7 +148,6 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // BURADA DEĞİŞİKLİK YAPTIK:
             // İlişkili verilerle beraber çekiyoruz (özellikle TrainerServices otomatik silinir ama Appointments sorun olabilir)
             var service = await _context.Services
                 .Include(s => s.Appointments)

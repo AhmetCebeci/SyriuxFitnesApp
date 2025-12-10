@@ -32,13 +32,13 @@
 
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label asp-for="WorkStartHour" class="form-label fw-bold">Mesai Başlangıç (0-23)</label>
-                                <input asp-for="WorkStartHour" class="form-control" type="number" min="0" max="23" />
+                                <label asp-for="WorkStartHour" class="form-label fw-bold">Mesai Başlangıç</label>
+                                <input asp-for="WorkStartHour" class="form-control" type="time" />
                                 <span asp-validation-for="WorkStartHour" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="WorkEndHour" class="form-label fw-bold">Mesai Bitiş (0-23)</label>
-                                <input asp-for="WorkEndHour" class="form-control" type="number" min="0" max="23" />
+                                <label asp-for="WorkEndHour" class="form-label fw-bold">Mesai Bitiş</label>
+                                <input asp-for="WorkEndHour" class="form-control" type="time" />
                                 <span asp-validation-for="WorkEndHour" class="text-danger"></span>
                             </div>
                         </div>

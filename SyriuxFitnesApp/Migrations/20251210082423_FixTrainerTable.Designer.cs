@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyriuxFitnesApp.Data;
 
@@ -11,9 +12,11 @@ using SyriuxFitnesApp.Data;
 namespace SyriuxFitnesApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251210082423_FixTrainerTable")]
+    partial class FixTrainerTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -292,7 +295,7 @@ namespace SyriuxFitnesApp.Migrations
 
                     b.HasIndex("TrainerId");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("SyriuxFitnesApp.Models.Salon", b =>
@@ -315,7 +318,7 @@ namespace SyriuxFitnesApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Salons", (string)null);
+                    b.ToTable("Salons");
 
                     b.HasData(
                         new
@@ -347,7 +350,7 @@ namespace SyriuxFitnesApp.Migrations
 
                     b.HasKey("ServiceId");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("SyriuxFitnesApp.Models.Trainer", b =>
@@ -375,7 +378,7 @@ namespace SyriuxFitnesApp.Migrations
 
                     b.HasKey("TrainerId");
 
-                    b.ToTable("Trainers", (string)null);
+                    b.ToTable("Trainers");
                 });
 
             modelBuilder.Entity("SyriuxFitnesApp.Models.TrainerService", b =>
@@ -390,7 +393,7 @@ namespace SyriuxFitnesApp.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("TrainerServices", (string)null);
+                    b.ToTable("TrainerServices");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

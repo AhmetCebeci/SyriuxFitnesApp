@@ -16,13 +16,15 @@ namespace SyriuxFitnesApp.Models
         public string Expertise { get; set; }
 
         // Çalışma saatleri için alanlar
-        [Display(Name = "Mesai Başlangıç Saati")]
-        [Range(0, 23)]
-        public int WorkStartHour { get; set; } = 9; // Varsayılan 09:00
+        [Display(Name = "Mesai Başlangıç")]
+        [Required(ErrorMessage = "Başlangıç saati giriniz.")]
+        [DataType(DataType.Time)] // Saat seçici çıkarır
+        public TimeSpan WorkStartHour { get; set; } = new TimeSpan(9, 0, 0);
 
-        [Display(Name = "Mesai Bitiş Saati")]
-        [Range(0, 23)]
-        public int WorkEndHour { get; set; } = 18; // Varsayılan 17:00
+        [Display(Name = "Mesai Bitiş")]
+        [Required(ErrorMessage = "Bitiş saati giriniz.")]
+        [DataType(DataType.Time)]
+        public TimeSpan WorkEndHour { get; set; } = new TimeSpan(17, 0, 0);
 
 
 
