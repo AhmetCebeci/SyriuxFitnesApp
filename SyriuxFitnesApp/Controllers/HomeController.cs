@@ -15,6 +15,15 @@ namespace SyriuxFitnesApp.Controllers
 
         public IActionResult Index()
         {
+            //  Admin Yönlendirmesi --
+            // Eðer kullanýcý giriþ yapmýþsa (User.Identity.IsAuthenticated)
+            // VE Rolü "Admin" ise, onu Ana Sayfa yerine Dashboard'a atýyoruz.
+            if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Index", "Dashboard", new { Area = "Admin" });
+            }
+            // ----------------------
+
             return View();
         }
 

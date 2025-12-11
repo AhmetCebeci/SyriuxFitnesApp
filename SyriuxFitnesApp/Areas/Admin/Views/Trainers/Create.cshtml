@@ -52,11 +52,18 @@
                                         foreach (var service in services)
                                         {
                                             <div class="col-md-6">
-                                                <div class="form-check">
+                                                <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox" name="selectedServices" value="@service.ServiceId" id="srv_@service.ServiceId">
+
                                                     <label class="form-check-label" for="srv_@service.ServiceId">
-                                                        @service.ServiceName <small class="text-muted">(@service.DurationMinutes dk)</small>
+                                                        <strong>@service.ServiceName</strong>
+                                                        <br />
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-clock"></i> @service.DurationMinutes dk -
+                                                            <i class="bi bi-cash"></i> @service.Price.ToString("0.##") TL
+                                                        </small>
                                                     </label>
+
                                                 </div>
                                             </div>
                                         }

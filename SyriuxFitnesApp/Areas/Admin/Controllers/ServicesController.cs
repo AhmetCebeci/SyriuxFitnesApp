@@ -128,8 +128,11 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
             }
 
             // İlişkili randevuları (Appointments) da çekiyoruz ki sayısını görelim.
+            // Bu hizmeti veren hocaları (TrainerServices) ve İsimlerini (Trainer) çekiyoruz.
             var service = await _context.Services
                 .Include(s => s.Appointments)
+                .Include(s => s.TrainerServices) // <--  Hoca sayısı için
+                    .ThenInclude(ts => ts.Trainer) // <--  Hoca isimlerini çekmek için
                 .FirstOrDefaultAsync(m => m.ServiceId == id);
 
             if (service == null)
@@ -139,6 +142,14 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
 
             // View'a gönderirken randevu sayısını ViewBag ile taşıyalım
             ViewBag.AppointmentCount = service.Appointments != null ? service.Appointments.Count : 0;
+
+            // View'a Hoca sayısını da gönderiyoruz
+            ViewBag.TrainerCount = service.TrainerServices != null ? service.TrainerServices.Count : 0;
+
+            // View'a Hoca İsimlerini Liste olarak gönderiyoruz
+            ViewBag.TrainerNames = service.TrainerServices != null
+                ? service.TrainerServices.Select(ts => ts.Trainer.FullName).ToList()
+                : new List<string>();
 
             return View(service);
         }

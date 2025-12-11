@@ -28,15 +28,14 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 // (2. ADIM: Çerez Ayarları) ---
-// Admin için "Beni Hatırla" kapalı olduğu için buradaki süre sadece oturum açıkken geçerli olur.
-// Memberlar için ise standart süre işler.
+// Çerez (Cookie) Süresi ---
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
-    options.SlidingExpiration = true;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true; // Kullanıcı işlem yaptıkça süre uzasın
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Oturum 60 dk sonra düşsün (Tarayıcı kapanırsa Admin için anında düşer)
 });
-// -----------------------------
+// -------------------------
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

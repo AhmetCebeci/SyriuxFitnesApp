@@ -12,27 +12,49 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
     [Authorize(Roles = "Admin")]
     public class DashboardController : Controller
     {
-        // --- EKLEME BAŞLANGIÇ: Veritabanı bağlantısı ---
+        // --- Veritabanı bağlantısı ---
         private readonly ApplicationDbContext _context;
 
         public DashboardController(ApplicationDbContext context)
         {
             _context = context;
         }
-        // --- EKLEME BİTİŞ ---
-
+        // -----------------------------
         public IActionResult Index()
         {
-            // İleride burada istatistikleri (üye sayısı, randevu sayısı) veritabanından çekeceğiz.
-            // Şimdilik sadece boş sayfayı döndürüyoruz.
+            // --- Çekme işlemini yapıyoruz ---
 
-            // --- Çekme işlemini şimdi yapıyoruz ---
-            // Admin de Users tablosunda olduğu için, onu saymamak adına toplamdan 1 çıkarıyoruz.
-            ViewBag.UyeSayisi = _context.Users.Count()-1;
+            // Dinamik Admin Sayısı Düşme ---
+            // Admin de Users tablosunda olduğu için, onu saymamak adına admin rolündeki kişi sayısını bulup düşüyoruz.
+            var adminRoleId = _context.Roles.FirstOrDefault(r => r.Name == "Admin")?.Id;
+            var adminCount = _context.UserRoles.Count(ur => ur.RoleId == adminRoleId);
+
+            ViewBag.UyeSayisi = _context.Users.Count() - adminCount;
+            // ------------------------------
+
             ViewBag.AntrenorSayisi = _context.Trainers.Count();
 
+            // Bekleyen ve Onaylanan Randevular
             ViewBag.BekleyenRandevu = _context.Appointments.Where(x => x.IsApproved == false).Count();
-            // --------------------------------------
+            ViewBag.OnaylananRandevu = _context.Appointments.Where(x => x.IsApproved == true).Count();
+
+            // Servis Sayısı
+            ViewBag.ServisSayisi = _context.Services.Count();
+
+            // Salon Bilgileri (Tek bir salon olduğu varsayımıyla ilk kaydı alıyoruz)
+            var salon = _context.Salons.FirstOrDefault();
+            if (salon != null)
+            {
+                ViewBag.SalonAdi = salon.SalonName;
+                // Saat formatını (09:00 - 22:00) şeklinde ayarlıyoruz
+                ViewBag.CalismaSaatleri = $"{salon.OpeningTime:hh\\:mm} - {salon.ClosingTime:hh\\:mm}";
+            }
+            else
+            {
+                ViewBag.SalonAdi = "Salon Tanımlı Değil";
+                ViewBag.CalismaSaatleri = "-";
+            }
+            // --------------------------------
 
             return View();
         }

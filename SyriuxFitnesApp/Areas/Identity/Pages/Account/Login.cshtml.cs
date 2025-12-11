@@ -80,39 +80,31 @@ namespace SyriuxFitnesApp.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // --- ADIM 1: KULLANICIYI BUL VE ROL KONTROLÜ YAP ---
+                // --- ADIM 1: KULLANICIYI BUL (Rol kontrolü ve yönlendirme için lazım) ---
                 var user = await _userManager.FindByEmailAsync(Input.Email);
-
-                if (user != null)
-                {
-                    // Eğer kullanıcı ADMIN ise, "Beni Hatırla"yı zorla KAPAT.
-                    // Böylece tarayıcı kapanınca oturum silinir.
-                    if (await _userManager.IsInRoleAsync(user, "Admin"))
-                    {
-                        Input.RememberMe = false;
-                    }
-                }
                 // ----------------------------------------------------
 
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                
+
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // --- ADIM 2: YÖNLENDİRME ---
+                    // --- ADIM 2: YÖNLENDİRME (Akıllı Yönlendirme) ---
+                    // -- Admin ise Dashboard'a git --
                     if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
                     {
                         // Admin ise Panele gönder
                         return RedirectToAction("Index", "Dashboard", new { Area = "Admin" });
                     }
+                    // -------------------------------------------
 
                     // Member ise normal akışa devam et
-                    return LocalRedirect(returnUrl); 
+                    return LocalRedirect(returnUrl);
                 }
-                
-                if (result.RequiresTwoFactor){} 
-                if (result.IsLockedOut){}
+
+                if (result.RequiresTwoFactor) { }
+                if (result.IsLockedOut) { }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Giriş başarısız. Email veya şifre hatalı.");

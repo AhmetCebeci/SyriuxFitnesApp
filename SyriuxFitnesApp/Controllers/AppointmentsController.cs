@@ -8,7 +8,7 @@ using SyriuxFitnesApp.Models;
 
 namespace SyriuxFitnesApp.Controllers
 {
-    [Authorize] // Sadece giriş yapmış üyeler
+    [Authorize] // Sadece giriş yapmış üyeler erişebilir
     public class AppointmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,17 +20,18 @@ namespace SyriuxFitnesApp.Controllers
             _userManager = userManager;
         }
 
-        // GET: Appointments (Randevularım)
+        // GET: Appointments (Randevularım Listesi)
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
+            // Sadece giriş yapan kullanıcıya ait randevuları getir
             var myAppointments = await _context.Appointments
                 .Include(a => a.Service)
                 .Include(a => a.Trainer)
                 .Where(a => a.MemberId == user.Id)
-                .OrderByDescending(a => a.AppointmentDate)
+                .OrderByDescending(a => a.AppointmentDate) // En yeni en üstte
                 .ToListAsync();
 
             return View(myAppointments);
@@ -39,8 +40,9 @@ namespace SyriuxFitnesApp.Controllers
         // GET: Appointments/Create
         public IActionResult Create()
         {
+            // Başlangıçta tüm listeyi gönderiyoruz, filtrelemeyi JS yapacak.
             ViewData["ServiceId"] = new SelectList(_context.Services, "ServiceId", "ServiceName");
-            // Trainer Expertise yerine FullName gösterilsin
+            // Trainer seçiminde isim soyisim görünsün
             ViewData["TrainerId"] = new SelectList(_context.Trainers, "TrainerId", "FullName");
             return View();
         }
@@ -53,37 +55,76 @@ namespace SyriuxFitnesApp.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
+            // Otomatik alanları doldur
             appointment.MemberId = user.Id;
-            appointment.IsApproved = false;
+            appointment.IsApproved = false; // Varsayılan: Onay Bekliyor
 
-            // --- GEÇMİŞ TARİH KONTROLÜ ---
+            // --- KONTROL 1: GEÇMİŞ TARİH VE SAAT KONTROLÜ (GÜNCELLENDİ) ---
             if (appointment.AppointmentDate < DateTime.Today)
             {
                 ModelState.AddModelError("", "Geçmiş bir tarihe randevu alamazsınız.");
             }
+            else if (appointment.AppointmentDate == DateTime.Today)
+            {
+                // Eğer tarih BUGÜN ise, saate de bakmamız lazım
+                if (!string.IsNullOrEmpty(appointment.AppointmentTime))
+                {
+                    TimeSpan selectedTime = TimeSpan.Parse(appointment.AppointmentTime);
+                    TimeSpan currentTime = DateTime.Now.TimeOfDay;
+
+                    if (selectedTime < currentTime)
+                    {
+                        ModelState.AddModelError("", "Bugün için geçmiş bir saate randevu alamazsınız.");
+                    }
+                }
+            }
+            // -------------------------------------------------------------
 
             if (ModelState.IsValid)
             {
                 var selectedService = await _context.Services.FindAsync(appointment.ServiceId);
                 var trainer = await _context.Trainers.FindAsync(appointment.TrainerId);
 
+                // --- Hoca bu dersi veriyor mu kontrolü (Validasyon) ---
+                bool validRelation = _context.TrainerServices.Any(ts => ts.TrainerId == appointment.TrainerId && ts.ServiceId == appointment.ServiceId);
+                if (!validRelation)
+                {
+                    ModelState.AddModelError("", "Seçilen antrenör bu hizmeti vermemektedir.");
+                }
+                // -------------------------------------------------------
+
+                // Salon bilgisini çekiyoruz (Tek salon var varsayıyoruz)
+                var salon = await _context.Salons.FirstOrDefaultAsync();
+
                 if (selectedService != null && trainer != null && appointment.AppointmentTime != null)
                 {
-                    // --- FİYAT VE SÜRE SABİTLEME ---
+                    // Fiyat ve süreyi o anki tarifeden sabitle (İleride zam gelirse etkilenmesin)
                     appointment.StoredPrice = selectedService.Price;
                     appointment.StoredDuration = selectedService.DurationMinutes;
 
-                    // --- MESAİ KONTROLÜ (TimeSpan Uyumlu) ---
+                    // Seçilen saati TimeSpan'e çevir
                     TimeSpan selectedTime = TimeSpan.Parse(appointment.AppointmentTime);
+                    // Bitiş saatini hesapla (Başlangıç + Ders Süresi)
                     TimeSpan endTime = selectedTime.Add(TimeSpan.FromMinutes(selectedService.DurationMinutes));
 
-                    if (selectedTime < trainer.WorkStartHour || endTime > trainer.WorkEndHour)
+                    // 1. Salon Saati Kontrolü 
+                    if (salon != null)
                     {
-                        ModelState.AddModelError("", $"Antrenörün mesai saatleri: {trainer.WorkStartHour:hh\\:mm} - {trainer.WorkEndHour:hh\\:mm}. Seçilen saat bu aralık dışında.");
+                        if (selectedTime < salon.OpeningTime || endTime > salon.ClosingTime)
+                        {
+                            ModelState.AddModelError("", $"Salon çalışma saatleri ({salon.OpeningTime:hh\\:mm} - {salon.ClosingTime:hh\\:mm}) dışındasınız.");
+                        }
                     }
 
-                    // --- ÇAKIŞMA KONTROLÜ ---
-                    if (ModelState.IsValid)
+                    // 2. Hoca Mesai Kontrolü
+                    // Not: Eğer salon kontrolünden geçtiyse buraya bakarız
+                    if (selectedTime < trainer.WorkStartHour || endTime > trainer.WorkEndHour)
+                    {
+                        ModelState.AddModelError("", $"Seçtiğiniz antrenör bu saatlerde çalışmıyor. (Mesai: {trainer.WorkStartHour:hh\\:mm} - {trainer.WorkEndHour:hh\\:mm})");
+                    }
+
+                    // 3. Antrenör Dolu mu? (Çakışma Kontrolü)
+                    if (ModelState.IsValid) // Üstteki hatalar yoksa bunu kontrol et
                     {
                         var existingAppointments = await _context.Appointments
                             .Where(a => a.TrainerId == appointment.TrainerId && a.AppointmentDate == appointment.AppointmentDate)
@@ -92,12 +133,15 @@ namespace SyriuxFitnesApp.Controllers
                         foreach (var existing in existingAppointments)
                         {
                             TimeSpan existingStart = TimeSpan.Parse(existing.AppointmentTime);
+                            // Veritabanındaki randevunun süresini al
                             int duration = existing.StoredDuration > 0 ? existing.StoredDuration : selectedService.DurationMinutes;
                             TimeSpan existingEnd = existingStart.Add(TimeSpan.FromMinutes(duration));
 
+                            // Çakışma Mantığı:
+                            // (Yeni Başlangıç < Eski Bitiş) VE (Eski Başlangıç < Yeni Bitiş)
                             if (selectedTime < existingEnd && existingStart < endTime)
                             {
-                                ModelState.AddModelError("", $"Seçilen saatlerde ({existing.AppointmentTime}) antrenör dolu.");
+                                ModelState.AddModelError("", $"Seçilen saatte ({existing.AppointmentTime}) antrenörün başka bir randevusu var. Lütfen başka bir saat seçiniz.");
                                 break;
                             }
                         }
@@ -112,9 +156,60 @@ namespace SyriuxFitnesApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Hata varsa formu tekrar doldurarak göster
             ViewData["ServiceId"] = new SelectList(_context.Services, "ServiceId", "ServiceName", appointment.ServiceId);
             ViewData["TrainerId"] = new SelectList(_context.Trainers, "TrainerId", "FullName", appointment.TrainerId);
             return View(appointment);
+        }
+
+        // POST: Appointments/Delete/5 (Sadece İptal Etme İşlemi)
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment != null)
+            {
+                _context.Appointments.Remove(appointment);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ---------------------------------------------------------
+        // AJAX API METODLARI (Filtreleme İçin)
+        // ---------------------------------------------------------
+
+        // 1. Antrenöre göre Servisleri getir
+        [HttpGet]
+        public JsonResult GetServicesByTrainer(int trainerId)
+        {
+            var services = _context.TrainerServices
+                .Where(ts => ts.TrainerId == trainerId)
+                .Include(ts => ts.Service)
+                .Select(ts => new {
+                    value = ts.ServiceId,
+                    text = ts.Service.ServiceName
+                })
+                .ToList();
+
+            return Json(services);
+        }
+
+        // 2. Servise göre Antrenörleri getir
+        [HttpGet]
+        public JsonResult GetTrainersByService(int serviceId)
+        {
+            var trainers = _context.TrainerServices
+                .Where(ts => ts.ServiceId == serviceId)
+                .Include(ts => ts.Trainer)
+                .Select(ts => new {
+                    value = ts.TrainerId,
+                    text = ts.Trainer.FullName
+                })
+                .ToList();
+
+            return Json(trainers);
         }
     }
 }

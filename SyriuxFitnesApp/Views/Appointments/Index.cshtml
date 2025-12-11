@@ -1,65 +1,62 @@
 ﻿@model IEnumerable<SyriuxFitnesApp.Models.Appointment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Randevularım";
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-week"></i> Randevularım</h2>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AppointmentDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AppointmentTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsApproved)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Member)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Trainer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Service)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppointmentDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppointmentTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsApproved)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Member.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Trainer.Expertise)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Service.ServiceName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AppointmentId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AppointmentId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AppointmentId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-5 shadow-sm">
+            <h4 class="alert-heading">Henüz hiç randevunuz yok.</h4>
+            <p>Spor yapmaya başlamak için hemen yeni bir randevu oluşturun!</p>
+            <a asp-action="Create" class="btn btn-success mt-2">Randevu Oluştur</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-start border-5 @(item.IsApproved ? "border-success" : "border-warning")">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title text-primary fw-bold mb-0">@item.Service.ServiceName</h5>
+
+                                @if (item.IsApproved)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Onaylandı</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Bekliyor</span>
+                                }
+                            </div>
+
+                            <p class="card-text text-muted mb-2">
+                                <i class="bi bi-person-badge me-2"></i> @item.Trainer.FullName
+                            </p>
+
+                            <div class="bg-light p-2 rounded d-flex justify-content-between text-secondary small">
+                                <span><i class="bi bi-calendar-event me-1"></i> @item.AppointmentDate.ToString("dd.MM.yyyy")</span>
+                                <span><i class="bi bi-clock me-1"></i> @item.AppointmentTime</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 text-end">
+                            <form asp-action="Delete" asp-route-id="@item.AppointmentId" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="bi bi-x-circle"></i> İptal Et
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

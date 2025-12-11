@@ -103,6 +103,11 @@
                         </li>
 
                         <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Members" ? "active" : "")" asp-area="Admin" asp-controller="Members" asp-action="Index">
+                                <i class="bi bi-people-fill"></i> Üyeler
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Salons" ? "active" : "")" asp-area="Admin" asp-controller="Salons" asp-action="Index">
                                 <i class="bi bi-building"></i> Salon Bilgileri
                             </a>

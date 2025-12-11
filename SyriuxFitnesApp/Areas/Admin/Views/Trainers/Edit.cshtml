@@ -33,12 +33,12 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label asp-for="WorkStartHour" class="form-label fw-bold">Mesai Başlangıç</label>
-                                <input asp-for="WorkStartHour" class="form-control" type="number" />
+                                <input asp-for="WorkStartHour" class="form-control" type="time" />
                                 <span asp-validation-for="WorkStartHour" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="WorkEndHour" class="form-label fw-bold">Mesai Bitiş</label>
-                                <input asp-for="WorkEndHour" class="form-control" type="number" />
+                                <input asp-for="WorkEndHour" class="form-control" type="time" />
                                 <span asp-validation-for="WorkEndHour" class="text-danger"></span>
                             </div>
                         </div>
@@ -55,21 +55,28 @@
                                             bool isChecked = selectedIds != null && selectedIds.Contains(service.ServiceId);
 
                                             <div class="col-md-6">
-                                                <div class="form-check">
+                                                <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox"
                                                            name="selectedServices"
                                                            value="@service.ServiceId"
                                                            id="srv_@service.ServiceId"
                                                            @(isChecked ? "checked" : "")>
+
                                                     <label class="form-check-label" for="srv_@service.ServiceId">
-                                                        @service.ServiceName
+                                                        <strong>@service.ServiceName</strong>
+                                                        <br />
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-clock"></i> @service.DurationMinutes dk -
+                                                            <i class="bi bi-cash"></i> @service.Price.ToString("0.##") TL
+                                                        </small>
                                                     </label>
+
                                                 </div>
                                             </div>
                                         }
                                     }
                                 </div>
-                                <small class="text-muted fst-italic mt-2 d-block">Not: Bir hizmetin işaretini kaldırırsanız, antrenör artık o dersi veremez ancak geçmiş randevular silinmez.</small>
+                                <small class="text-muted fst-italic mt-2 d-block">Not: Bir hizmetin işaretini kaldırırsanız, antrenör artık o dersi veremez. Mevcut onaylı randevular korunur, ancak onay bekleyen talepler silinir.</small>
                             </div>
                         </div>
 
