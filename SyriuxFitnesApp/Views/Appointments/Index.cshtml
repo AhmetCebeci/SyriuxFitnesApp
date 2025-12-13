@@ -42,6 +42,14 @@
                                 <i class="bi bi-person-badge me-2"></i> @item.Trainer.FullName
                             </p>
 
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-stopwatch"></i> @item.StoredDuration Dk
+                                </span>
+                                <span class="badge bg-light text-success border border-success">
+                                    <i class="bi bi-currency-lira"></i> @item.StoredPrice.ToString("N2") ₺
+                                </span>
+                            </div>
                             <div class="bg-light p-2 rounded d-flex justify-content-between text-secondary small">
                                 <span><i class="bi bi-calendar-event me-1"></i> @item.AppointmentDate.ToString("dd.MM.yyyy")</span>
                                 <span><i class="bi bi-clock me-1"></i> @item.AppointmentTime</span>

@@ -4,6 +4,16 @@
     ViewData["Title"] = "Randevu Al";
 }
 
+<style>
+    /* Kilitlendiğinde kutunun alacağı şekil (Gri ve tıklanamaz) */
+    .locked-field {
+        background-color: #e9ecef !important; /* Gri arka plan */
+        pointer-events: none; /* Tıklamayı engelle */
+        color: #6c757d; /* Yazıyı soluklaştır */
+        cursor: not-allowed;
+    }
+</style>
+
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
@@ -24,7 +34,7 @@
                         </div>
                     }
 
-                    <form asp-action="Create">
+                    <form asp-action="Create" id="createAppointmentForm">
 
                         <div class="form-floating mb-3">
                             <select asp-for="ServiceId" class="form-select" id="ServiceId" asp-items="ViewBag.ServiceId">
@@ -84,74 +94,76 @@
     <script>
         $(document).ready(function () {
 
-            // Başlangıç listelerini sakla (Sıfırlama için)
             var allServicesHtml = $("#ServiceId").html();
             var allTrainersHtml = $("#TrainerId").html();
-
-            // Bayrak: Şu an işlem yapılıyor mu?
             var isUpdating = false;
 
-            // --- 1. Antrenör Değişirse -> Servisleri Filtrele ---
+            // --- KİLİTLEME FONKSİYONU (CSS İLE) ---
+            // Bu yöntem verinin sunucuya gitmesini engellemez, sadece kullanıcının tıklamasını engeller.
+            function checkAndLock() {
+                var sVal = $("#ServiceId").val();
+                var tVal = $("#TrainerId").val();
+
+                if (sVal && tVal) {
+                    // CSS sınıfı ekle (Görsel olarak kilitle)
+                    $("#ServiceId, #TrainerId").addClass("locked-field");
+                    // Tab ile üzerine gelinmesini engelle
+                    $("#ServiceId, #TrainerId").attr("tabindex", "-1");
+                }
+            }
+
+            // --- 1. Antrenör Değişirse ---
             $("#TrainerId").change(function () {
                 if (isUpdating) return;
-
                 var trainerId = $(this).val();
-
-                // Eğer boş seçildiyse dur
                 if (!trainerId) return;
 
-                isUpdating = true; // Kilit: Diğer taraf tetiklenmesin
-
-                // Şu an seçili servisi aklımızda tutalım
+                isUpdating = true;
                 var currentServiceId = $("#ServiceId").val();
+
+                if (currentServiceId) {
+                    checkAndLock();
+                    isUpdating = false;
+                    return;
+                }
 
                 $.getJSON("/Appointments/GetServicesByTrainer", { trainerId: trainerId }, function (data) {
                     var items = '<option value="">-- Hizmet Seçiniz --</option>';
-                    var matchFound = false;
-
                     $.each(data, function (i, service) {
                         var isSelected = (service.value == currentServiceId) ? "selected" : "";
-                        if(isSelected) matchFound = true;
                         items += "<option value='" + service.value + "' " + isSelected + ">" + service.text + "</option>";
                     });
 
                     $("#ServiceId").html(items);
-
-                    // Eğer eski seçili servis bu hocada yoksa, servisi boşa çek
-                    if(!matchFound) $("#ServiceId").val("");
-
-                    isUpdating = false; // Kilit aç
+                    isUpdating = false;
+                    checkAndLock();
                 });
             });
 
-            // --- 2. Hizmet Değişirse -> Antrenörleri Filtrele ---
+            // --- 2. Hizmet Değişirse ---
             $("#ServiceId").change(function () {
                 if (isUpdating) return;
-
-                // --- KEDİ KUYRUĞU ENGELLEYİCİ ---
-                // Eğer zaten bir Antrenör seçiliyse, Hizmet değiştirmek Antrenör listesini bozmasın.
-                // Çünkü zaten o antrenöre uygun bir hizmet seçiyoruzdur.
-                if ($("#TrainerId").val() != "" && $("#TrainerId").val() != null) {
-                    return;
-                }
-                // --------------------------------
-
                 var serviceId = $(this).val();
                 if (!serviceId) return;
 
-                isUpdating = true; // Kilit
-
+                isUpdating = true;
                 var currentTrainerId = $("#TrainerId").val();
+
+                if (currentTrainerId) {
+                    checkAndLock();
+                    isUpdating = false;
+                    return;
+                }
 
                 $.getJSON("/Appointments/GetTrainersByService", { serviceId: serviceId }, function (data) {
                     var items = '<option value="">-- Antrenör Seçiniz --</option>';
-
                     $.each(data, function (i, trainer) {
-                        items += "<option value='" + trainer.value + "'>" + trainer.text + "</option>";
+                        var isSelected = (trainer.value == currentTrainerId) ? "selected" : "";
+                        items += "<option value='" + trainer.value + "' " + isSelected + ">" + trainer.text + "</option>";
                     });
                     $("#TrainerId").html(items);
-
-                    isUpdating = false; // Kilit aç
+                    isUpdating = false;
+                    checkAndLock();
                 });
             });
 
@@ -159,17 +171,17 @@
             $("#btnResetFilters").click(function () {
                 isUpdating = true;
 
-                // HTML içeriklerini ilk haline döndür (Tüm liste)
-                $("#ServiceId").html(allServicesHtml);
-                $("#TrainerId").html(allTrainersHtml);
+                $("#ServiceId").html(allServicesHtml).val("");
+                $("#TrainerId").html(allTrainersHtml).val("");
 
-                // Seçimleri temizle
-                $("#ServiceId").val("");
-                $("#TrainerId").val("");
+                // CSS kilitlerini kaldır
+                $("#ServiceId, #TrainerId").removeClass("locked-field").removeAttr("tabindex");
 
                 isUpdating = false;
             });
 
+            // NOT: Submit handler'a artık gerek yok çünkü 'disabled' attribute kullanmıyoruz.
+            // CSS ile engellediğimiz için veriler arka planda sorunsuz gidecek.
         });
     </script>
 }

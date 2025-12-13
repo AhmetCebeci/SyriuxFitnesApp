@@ -59,24 +59,22 @@ namespace SyriuxFitnesApp.Controllers
             appointment.MemberId = user.Id;
             appointment.IsApproved = false; // Varsayılan: Onay Bekliyor
 
-            // --- KONTROL 1: GEÇMİŞ TARİH VE SAAT KONTROLÜ (GÜNCELLENDİ) ---
-            if (appointment.AppointmentDate < DateTime.Today)
+            // --- KONTROL 1: GEÇMİŞ TARİH VE SAAT KONTROLÜ (GÜNCELLENDİ - KESİN ÇÖZÜM) ---
+            // Tarihi ve saati birleştirip tam şu an ile kıyaslıyoruz.
+            if (!string.IsNullOrEmpty(appointment.AppointmentTime))
             {
-                ModelState.AddModelError("", "Geçmiş bir tarihe randevu alamazsınız.");
-            }
-            else if (appointment.AppointmentDate == DateTime.Today)
-            {
-                // Eğer tarih BUGÜN ise, saate de bakmamız lazım
-                if (!string.IsNullOrEmpty(appointment.AppointmentTime))
-                {
-                    TimeSpan selectedTime = TimeSpan.Parse(appointment.AppointmentTime);
-                    TimeSpan currentTime = DateTime.Now.TimeOfDay;
+                // Seçilen Tarih (Örn: 12.12.2025 00:00) + Seçilen Saat (Örn: 14:00) = 12.12.2025 14:00
+                var combinedDateTime = appointment.AppointmentDate.Date.Add(TimeSpan.Parse(appointment.AppointmentTime));
 
-                    if (selectedTime < currentTime)
-                    {
-                        ModelState.AddModelError("", "Bugün için geçmiş bir saate randevu alamazsınız.");
-                    }
+                if (combinedDateTime < DateTime.Now)
+                {
+                    ModelState.AddModelError("", "Geçmiş bir tarih veya saate randevu alamazsınız.");
                 }
+            }
+            else if (appointment.AppointmentDate < DateTime.Today)
+            {
+                // Eğer saat seçilmemişse (ki zorunlu ama yine de) sadece güne bak
+                ModelState.AddModelError("", "Geçmiş bir tarihe randevu alamazsınız.");
             }
             // -------------------------------------------------------------
 
