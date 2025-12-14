@@ -5,24 +5,41 @@
 }
 
 <style>
-    /* Kilitlendiğinde kutunun alacağı şekil (Gri ve tıklanamaz) */
     .locked-field {
-        background-color: #e9ecef !important; /* Gri arka plan */
-        pointer-events: none; /* Tıklamayı engelle */
-        color: #6c757d; /* Yazıyı soluklaştır */
+        background-color: #e9ecef !important;
+        pointer-events: none;
+        color: #6c757d;
         cursor: not-allowed;
+    }
+
+    .time-slot-btn {
+        width: 80px;
+        margin: 5px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+        .time-slot-btn:hover {
+            transform: scale(1.05);
+            font-weight: bold;
+        }
+
+    /* Hizmet Detay Kartı Stili */
+    .service-info-card {
+        border-left: 5px solid #0d6efd;
+        background-color: #f8f9fa;
+        display: none; /* Başlangıçta gizli */
     }
 </style>
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card shadow border-0">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0"><i class="bi bi-calendar-plus"></i> Yeni Randevu Oluştur</h4>
-
                     <button type="button" id="btnResetFilters" class="btn btn-sm btn-light text-success fw-bold">
-                        <i class="bi bi-arrow-counterclockwise"></i> Seçimleri Sıfırla
+                        <i class="bi bi-arrow-counterclockwise"></i> Sıfırla
                     </button>
                 </div>
                 <div class="card-body bg-light">
@@ -36,12 +53,26 @@
 
                     <form asp-action="Create" id="createAppointmentForm">
 
-                        <div class="form-floating mb-3">
+                        <div class="form-floating mb-2">
                             <select asp-for="ServiceId" class="form-select" id="ServiceId" asp-items="ViewBag.ServiceId">
                                 <option value="" selected>-- Önce Buradan Veya Diğerinden Seçim Yapın --</option>
                             </select>
                             <label asp-for="ServiceId">Hizmet Türü</label>
                             <span asp-validation-for="ServiceId" class="text-danger small"></span>
+                        </div>
+
+                        <div id="serviceDetailBox" class="alert service-info-card py-2 mb-3 shadow-sm">
+                            <div class="d-flex align-items-center text-primary">
+                                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="m-0 fw-bold" id="infoServiceName">Hizmet Adı</h6>
+                                    <small class="text-dark fw-bold" id="infoServiceDetails">
+                                        <i class="bi bi-clock"></i> <span id="spanDuration">--</span> dk
+                                        &nbsp;|&nbsp;
+                                        <i class="bi bi-currency-lira"></i> <span id="spanPrice">--</span> TL
+                                    </small>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-floating mb-3">
@@ -55,26 +86,38 @@
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input asp-for="AppointmentDate" class="form-control" type="date"
-                                           min="@DateTime.Now.ToString("yyyy-MM-dd")" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    <input asp-for="AppointmentDate" class="form-control" type="date" id="AppointmentDate"
+                                           min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                           max="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")"
+                                           value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                           oninvalid="if(this.validity.rangeUnderflow) this.setCustomValidity('Geçmiş bir tarihe randevu alamazsınız!'); else if(this.validity.rangeOverflow) this.setCustomValidity('En fazla 30 gün sonrasına randevu alabilirsiniz!');"
+                                           oninput="this.setCustomValidity('')" />
                                     <label asp-for="AppointmentDate">Tarih</label>
                                     <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input asp-for="AppointmentTime" class="form-control" type="time" step="900" />
-                                    <label asp-for="AppointmentTime">Saat</label>
+                                    <input asp-for="AppointmentTime" class="form-control" type="text" id="AppointmentTime" readonly placeholder="--:--" style="background-color: white;" />
+                                    <label asp-for="AppointmentTime">Saat (Seçiniz)</label>
                                     <span asp-validation-for="AppointmentTime" class="text-danger small"></span>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-text text-muted mb-4">
-                            <i class="bi bi-info-circle"></i> Randevular salonun ve antrenörün uygunluk durumuna göre kontrol edilecektir.
+
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-clock-history text-primary fs-5 me-2"></i>
+                                <h5 class="fw-bold text-dark m-0">Müsait Randevu Saatleri</h5>
+                            </div>
+
+                            <div id="slotsContainer" class="p-3 bg-white border rounded text-center shadow-sm" style="min-height: 80px;">
+                                <span class="text-muted fst-italic small">Lütfen Hizmet, Antrenör ve Tarih seçiniz...</span>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-success btn-lg shadow-sm">
                                 <i class="bi bi-check-lg"></i> Randevuyu Kaydet
                             </button>
                             <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç ve Dön</a>
@@ -98,19 +141,79 @@
             var allTrainersHtml = $("#TrainerId").html();
             var isUpdating = false;
 
-            // --- KİLİTLEME FONKSİYONU (CSS İLE) ---
-            // Bu yöntem verinin sunucuya gitmesini engellemez, sadece kullanıcının tıklamasını engeller.
+            // --- YARDIMCI FONKSİYON: HİZMET BİLGİSİNİ GÖSTER ---
+            function updateServiceCard() {
+                // Seçili opsiyonu bul
+                var selectedOption = $("#ServiceId").find(':selected');
+                var duration = selectedOption.data('duration');
+                var price = selectedOption.data('price');
+                var name = selectedOption.text();
+
+                // Eğer data-attribute varsa göster (AJAX ile gelmişse)
+                if (duration && price) {
+                    $("#infoServiceName").text(name);
+                    $("#spanDuration").text(duration);
+                    $("#spanPrice").text(price);
+                    $("#serviceDetailBox").slideDown(); // Efektli açılış
+                } else {
+                    // Veri yoksa veya seçim boşsa gizle
+                    $("#serviceDetailBox").slideUp();
+                }
+            }
+
+            // --- KİLİTLEME VE SAAT GETİRME FONKSİYONU ---
             function checkAndLock() {
                 var sVal = $("#ServiceId").val();
                 var tVal = $("#TrainerId").val();
+                var dVal = $("#AppointmentDate").val();
 
+                // Hizmet değiştiğinde kartı güncelle
+                updateServiceCard();
+
+                // Eğer Hoca ve Hizmet seçiliyse kilitle
                 if (sVal && tVal) {
-                    // CSS sınıfı ekle (Görsel olarak kilitle)
                     $("#ServiceId, #TrainerId").addClass("locked-field");
-                    // Tab ile üzerine gelinmesini engelle
                     $("#ServiceId, #TrainerId").attr("tabindex", "-1");
                 }
+
+                // Eğer Hoca, Hizmet VE Tarih seçiliyse -> SAATLERİ GETİR (API ÇAĞRISI)
+                if (sVal && tVal && dVal) {
+                    loadAvailableSlots(tVal, sVal, dVal);
+                }
             }
+
+            // --- MÜSAİT SAATLERİ ÇEKEN FONKSİYON (REST API KULLANIMI) ---
+            function loadAvailableSlots(trainerId, serviceId, date) {
+                $("#slotsContainer").html('<div class="spinner-border text-primary spinner-border-sm" role="status"></div><span class="ms-2">Saatler hesaplanıyor...</span>');
+
+                $.getJSON("/Appointments/GetAvailableHours", { trainerId: trainerId, serviceId: serviceId, date: date }, function (data) {
+
+                    if (data.length === 0) {
+                        $("#slotsContainer").html('<div class="alert alert-warning py-1 m-0 small"><i class="bi bi-exclamation-triangle"></i> Uygun saat yok.</div>');
+                        return;
+                    }
+
+                    var buttonsHtml = "";
+                    $.each(data, function (i, time) {
+                        // Tıklanınca selectTime fonksiyonunu çağıracak butonlar
+                        buttonsHtml += `<button type="button" class="btn btn-outline-success time-slot-btn" onclick="selectTime('${time}')">${time}</button>`;
+                    });
+
+                    $("#slotsContainer").html(buttonsHtml);
+                });
+            }
+
+            // --- SAAT SEÇME FONKSİYONU ---
+            window.selectTime = function(time) {
+                $("#AppointmentTime").val(time);
+                $(".time-slot-btn").removeClass("active bg-success text-white");
+                event.target.classList.add("active", "bg-success", "text-white");
+            };
+
+            // --- TARİH DEĞİŞİRSE ---
+            $("#AppointmentDate").change(function() {
+                checkAndLock();
+            });
 
             // --- 1. Antrenör Değişirse ---
             $("#TrainerId").change(function () {
@@ -131,7 +234,8 @@
                     var items = '<option value="">-- Hizmet Seçiniz --</option>';
                     $.each(data, function (i, service) {
                         var isSelected = (service.value == currentServiceId) ? "selected" : "";
-                        items += "<option value='" + service.value + "' " + isSelected + ">" + service.text + "</option>";
+                        // BURASI GÜNCELLENDİ: data-price ve data-duration eklendi
+                        items += `<option value='${service.value}' data-price='${service.price}' data-duration='${service.duration}' ${isSelected}>${service.text}</option>`;
                     });
 
                     $("#ServiceId").html(items);
@@ -142,8 +246,15 @@
 
             // --- 2. Hizmet Değişirse ---
             $("#ServiceId").change(function () {
-                if (isUpdating) return;
+                if (isUpdating) {
+                     updateServiceCard(); // Güncelleme sırasında da kartı kontrol et
+                     return;
+                }
                 var serviceId = $(this).val();
+
+                // Seçim değişince kartı güncelle
+                updateServiceCard();
+
                 if (!serviceId) return;
 
                 isUpdating = true;
@@ -161,6 +272,7 @@
                         var isSelected = (trainer.value == currentTrainerId) ? "selected" : "";
                         items += "<option value='" + trainer.value + "' " + isSelected + ">" + trainer.text + "</option>";
                     });
+
                     $("#TrainerId").html(items);
                     isUpdating = false;
                     checkAndLock();
@@ -173,15 +285,14 @@
 
                 $("#ServiceId").html(allServicesHtml).val("");
                 $("#TrainerId").html(allTrainersHtml).val("");
+                $("#AppointmentTime").val("");
+                $("#slotsContainer").html('<span class="text-muted fst-italic small">Lütfen Hizmet, Antrenör ve Tarih seçiniz...</span>');
+                $("#serviceDetailBox").slideUp(); // Kartı gizle
 
-                // CSS kilitlerini kaldır
                 $("#ServiceId, #TrainerId").removeClass("locked-field").removeAttr("tabindex");
 
                 isUpdating = false;
             });
-
-            // NOT: Submit handler'a artık gerek yok çünkü 'disabled' attribute kullanmıyoruz.
-            // CSS ile engellediğimiz için veriler arka planda sorunsuz gidecek.
         });
     </script>
 }

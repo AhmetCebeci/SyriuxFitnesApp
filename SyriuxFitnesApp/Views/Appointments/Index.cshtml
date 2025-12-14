@@ -56,11 +56,12 @@
                             </div>
                         </div>
                         <div class="card-footer bg-white border-top-0 text-end">
-                            <form asp-action="Delete" asp-route-id="@item.AppointmentId" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
-                                    <i class="bi bi-x-circle"></i> İptal Et
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal"
+                                    data-id="@item.AppointmentId">
+                                <i class="bi bi-x-circle"></i> İptal Et
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -68,3 +69,42 @@
         </div>
     }
 </div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> Randevu İptali</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="lead mb-0">Bu randevuyu iptal etmek istediğinize emin misiniz?</p>
+                <small class="text-muted">Bu işlem geri alınamaz.</small>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Vazgeç</button>
+
+                <form id="deleteForm" method="post" action="">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger px-4">Evet, İptal Et</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Modal açıldığında tetiklenen olay
+        var deleteModal = document.getElementById('deleteModal');
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            // Butona tıklandığında data-id değerini al
+            var button = event.relatedTarget;
+            var appointmentId = button.getAttribute('data-id');
+
+            // Formun action kısmını güncelle: /Appointments/Delete/123
+            var form = document.getElementById('deleteForm');
+            form.action = '/Appointments/Delete/' + appointmentId;
+        });
+    </script>
+}

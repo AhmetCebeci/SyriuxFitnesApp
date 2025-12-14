@@ -59,7 +59,7 @@ namespace SyriuxFitnesApp.Controllers
             appointment.MemberId = user.Id;
             appointment.IsApproved = false; // Varsayılan: Onay Bekliyor
 
-            // --- KONTROL 1: GEÇMİŞ TARİH VE SAAT KONTROLÜ (GÜNCELLENDİ - KESİN ÇÖZÜM) ---
+            // --- KONTROL 1: GEÇMİŞ TARİH VE SAAT KONTROLÜ ---
             // Tarihi ve saati birleştirip tam şu an ile kıyaslıyoruz.
             if (!string.IsNullOrEmpty(appointment.AppointmentTime))
             {
@@ -76,6 +76,13 @@ namespace SyriuxFitnesApp.Controllers
                 // Eğer saat seçilmemişse (ki zorunlu ama yine de) sadece güne bak
                 ModelState.AddModelError("", "Geçmiş bir tarihe randevu alamazsınız.");
             }
+
+            // --- KONTROL 2: İLERİ TARİH SINIRI (Maksimum 30 Gün) ---
+            // Bugünden itibaren 30 gün sonrasına kadar izin ver
+            if (appointment.AppointmentDate > DateTime.Today.AddDays(30))
+            {
+                ModelState.AddModelError("", "En fazla 30 gün sonrasına randevu alabilirsiniz.");
+            }
             // -------------------------------------------------------------
 
             if (ModelState.IsValid)
@@ -84,10 +91,17 @@ namespace SyriuxFitnesApp.Controllers
                 var trainer = await _context.Trainers.FindAsync(appointment.TrainerId);
 
                 // --- Hoca bu dersi veriyor mu kontrolü (Validasyon) ---
-                bool validRelation = _context.TrainerServices.Any(ts => ts.TrainerId == appointment.TrainerId && ts.ServiceId == appointment.ServiceId);
-                if (!validRelation)
+                if (appointment.TrainerId == 0 || appointment.ServiceId == 0)
                 {
-                    ModelState.AddModelError("", "Seçilen antrenör bu hizmeti vermemektedir.");
+                    ModelState.AddModelError("", "HATA: Seçimler sisteme ulaşmadı. Lütfen sayfayı yenileyip tekrar deneyin.");
+                }
+                else
+                {
+                    bool validRelation = _context.TrainerServices.Any(ts => ts.TrainerId == appointment.TrainerId && ts.ServiceId == appointment.ServiceId);
+                    if (!validRelation)
+                    {
+                        ModelState.AddModelError("", $"HATA: Seçilen antrenör (ID:{appointment.TrainerId}) bu hizmeti (ID:{appointment.ServiceId}) sistemde vermiyor görünüyor.");
+                    }
                 }
                 // -------------------------------------------------------
 
@@ -122,7 +136,7 @@ namespace SyriuxFitnesApp.Controllers
                     }
 
                     // 3. Antrenör Dolu mu? (Çakışma Kontrolü)
-                    if (ModelState.IsValid) // Üstteki hatalar yoksa bunu kontrol et
+                    if (ModelState.IsValid)
                     {
                         var existingAppointments = await _context.Appointments
                             .Where(a => a.TrainerId == appointment.TrainerId && a.AppointmentDate == appointment.AppointmentDate)
@@ -136,7 +150,6 @@ namespace SyriuxFitnesApp.Controllers
                             TimeSpan existingEnd = existingStart.Add(TimeSpan.FromMinutes(duration));
 
                             // Çakışma Mantığı:
-                            // (Yeni Başlangıç < Eski Bitiş) VE (Eski Başlangıç < Yeni Bitiş)
                             if (selectedTime < existingEnd && existingStart < endTime)
                             {
                                 ModelState.AddModelError("", $"Seçilen saatte ({existing.AppointmentTime}) antrenörün başka bir randevusu var. Lütfen başka bir saat seçiniz.");
@@ -144,6 +157,34 @@ namespace SyriuxFitnesApp.Controllers
                             }
                         }
                     }
+
+                    // =================================================================================
+                    // 4. KULLANICI (ÜYE) ÇAKIŞMA KONTROLÜ 
+                    // =================================================================================
+                    if (ModelState.IsValid)
+                    {
+                        // Kullanıcının o günkü kendi randevularını çekiyoruz
+                        var myExistingAppointments = await _context.Appointments
+                            .Include(a => a.Service) // Hizmet süresini öğrenmek için gerekli
+                            .Where(a => a.MemberId == user.Id && a.AppointmentDate == appointment.AppointmentDate)
+                            .ToListAsync();
+
+                        foreach (var myApp in myExistingAppointments)
+                        {
+                            TimeSpan myStart = TimeSpan.Parse(myApp.AppointmentTime);
+                            // Eğer veritabanında kayıtlı süre varsa onu al, yoksa servisin güncel süresini al
+                            int myDuration = myApp.StoredDuration > 0 ? myApp.StoredDuration : (myApp.Service != null ? myApp.Service.DurationMinutes : 0);
+                            TimeSpan myEnd = myStart.Add(TimeSpan.FromMinutes(myDuration));
+
+                            // Çakışma Mantığı: (YeniStart < EskiEnd) VE (EskiStart < YeniEnd)
+                            if (selectedTime < myEnd && myStart < endTime)
+                            {
+                                ModelState.AddModelError("", $"HATA: Seçtiğiniz saat aralığında ({myApp.AppointmentTime} - {myEnd:hh\\:mm}) zaten '{myApp.Service?.ServiceName}' randevunuz bulunmaktadır. Aynı anda iki randevuya katılamazsınız.");
+                                break;
+                            }
+                        }
+                    }
+                    // =================================================================================
                 }
             }
 
@@ -175,7 +216,7 @@ namespace SyriuxFitnesApp.Controllers
         }
 
         // ---------------------------------------------------------
-        // AJAX API METODLARI (Filtreleme İçin)
+        // AJAX API METODLARI (Filtreleme ve Müsaitlik İçin)
         // ---------------------------------------------------------
 
         // 1. Antrenöre göre Servisleri getir
@@ -187,7 +228,9 @@ namespace SyriuxFitnesApp.Controllers
                 .Include(ts => ts.Service)
                 .Select(ts => new {
                     value = ts.ServiceId,
-                    text = ts.Service.ServiceName
+                    text = ts.Service.ServiceName,
+                    duration = ts.Service.DurationMinutes,
+                    price = ts.Service.Price
                 })
                 .ToList();
 
@@ -208,6 +251,74 @@ namespace SyriuxFitnesApp.Controllers
                 .ToList();
 
             return Json(trainers);
+        }
+
+        // 3. Müsait Saatleri Getir  REST API KISMI)
+        [HttpGet]
+        public async Task<JsonResult> GetAvailableHours(int trainerId, int serviceId, DateTime date)
+        {
+            // Gerekli verileri çek
+            var trainer = await _context.Trainers.FindAsync(trainerId);
+            var service = await _context.Services.FindAsync(serviceId);
+            var salon = await _context.Salons.FirstOrDefaultAsync();
+
+            if (trainer == null || service == null || salon == null) return Json(new List<string>());
+
+            // O günkü mevcut randevuları çek
+            var appointments = await _context.Appointments
+                .Where(a => a.TrainerId == trainerId && a.AppointmentDate == date)
+                .ToListAsync();
+
+            List<string> availableSlots = new List<string>();
+
+            // Başlangıç ve Bitiş aralığını belirle (Hoca mesaisi ve Salon saatlerinin kesişimi)
+            // Örn: Salon 09:00, Hoca 10:00 başlıyorsa -> Başlangıç 10:00
+            TimeSpan start = (trainer.WorkStartHour > salon.OpeningTime) ? trainer.WorkStartHour : salon.OpeningTime;
+            TimeSpan end = (trainer.WorkEndHour < salon.ClosingTime) ? trainer.WorkEndHour : salon.ClosingTime;
+
+            // Döngü ile saatleri kontrol et (15'er dakika arayla)
+            TimeSpan current = start;
+            TimeSpan serviceDuration = TimeSpan.FromMinutes(service.DurationMinutes);
+
+            while (current.Add(serviceDuration) <= end)
+            {
+                // Eğer tarih BUGÜN ise ve saat geçmişse, listeye ekleme
+                if (date.Date == DateTime.Today && current < DateTime.Now.TimeOfDay)
+                {
+                    current = current.Add(TimeSpan.FromMinutes(15));
+                    continue;
+                }
+
+                // Çakışma kontrolü
+                bool isOccupied = false;
+                TimeSpan potentialEnd = current.Add(serviceDuration);
+
+                foreach (var app in appointments)
+                {
+                    TimeSpan appStart = TimeSpan.Parse(app.AppointmentTime);
+                    // Veritabanında süre yoksa default servisten al (eski kayıtlar için)
+                    int appDurationMinutes = app.StoredDuration > 0 ? app.StoredDuration : service.DurationMinutes;
+                    TimeSpan appEnd = appStart.Add(TimeSpan.FromMinutes(appDurationMinutes));
+
+                    // Kesişim formülü: (StartA < EndB) and (EndA > StartB)
+                    if (current < appEnd && appStart < potentialEnd)
+                    {
+                        isOccupied = true;
+                        break;
+                    }
+                }
+
+                if (!isOccupied)
+                {
+                    // "hh:mm" formatında listeye ekle (Örn: 14:00)
+                    availableSlots.Add(current.ToString(@"hh\:mm"));
+                }
+
+                // Bir sonraki bloğa geç (15 dk sonra)
+                current = current.Add(TimeSpan.FromMinutes(15));
+            }
+
+            return Json(availableSlots);
         }
     }
 }

@@ -29,8 +29,18 @@
                                 <label asp-for="DurationMinutes" class="form-label fw-bold">Süre (Dakika)</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
-                                    <input asp-for="DurationMinutes" class="form-control" placeholder="Lütfen süreyi 15-120 dk arası giriniz." />
+                                    <select asp-for="DurationMinutes" class="form-select">
+                                        <option value="15">15 Dakika</option>
+                                        <option value="30">30 Dakika</option>
+                                        <option value="45">45 Dakika</option>
+                                        <option value="60">60 Dakika (1 Saat)</option>
+                                        <option value="75">75 Dakika (1 Saat 15 Dk)</option>
+                                        <option value="90">90 Dakika (1.5 Saat)</option>
+                                        <option value="105">105 Dakika</option>
+                                        <option value="120">120 Dakika (2 Saat)</option>
+                                    </select>
                                 </div>
+                                <div class="form-text text-muted">Randevu sistemi 15 dakikalık bloklar halinde çalışır.</div>
                                 <span asp-validation-for="DurationMinutes" class="text-danger"></span>
                             </div>
 
@@ -38,7 +48,7 @@
                                 <label asp-for="Price" class="form-label fw-bold">Ücret (TL)</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">₺</span>
-                                    <input asp-for="Price" class="form-control" placeholder="Lütfen ücreti 0-10000 arası giriniz." />
+                                    <input asp-for="Price" class="form-control" placeholder="Örn: 500" />
                                 </div>
                                 <span asp-validation-for="Price" class="text-danger"></span>
                             </div>
