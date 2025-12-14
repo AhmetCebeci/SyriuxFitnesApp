@@ -90,8 +90,10 @@
                                            min="@DateTime.Now.ToString("yyyy-MM-dd")"
                                            max="@DateTime.Now.AddDays(30).ToString("yyyy-MM-dd")"
                                            value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                                           oninvalid="if(this.validity.rangeUnderflow) this.setCustomValidity('Geçmiş bir tarihe randevu alamazsınız!'); else if(this.validity.rangeOverflow) this.setCustomValidity('En fazla 30 gün sonrasına randevu alabilirsiniz!');"
-                                           oninput="this.setCustomValidity('')" />
+                                           data-val="true"
+                                           data-val-required="Tarih seçimi zorunludur."
+                                           data-msg-min="Geçmiş bir tarihe randevu alamazsınız!"
+                                           data-msg-max="En fazla 30 gün sonrasına randevu alabilirsiniz!" />
                                     <label asp-for="AppointmentDate">Tarih</label>
                                     <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
                                 </div>
@@ -136,6 +138,16 @@
 
     <script>
         $(document).ready(function () {
+
+            // --- JQUERY VALIDATION AYARI (İNGİLİZCE HATALARI EZMEK İÇİN) ---
+            if ($.validator) {
+                $.extend($.validator.messages, {
+                    min: "Geçmiş bir tarihe randevu alamazsınız!",
+                    max: "En fazla 30 gün sonrasına randevu alabilirsiniz!",
+                    required: "Bu alanın doldurulması zorunludur."
+                });
+            }
+            // -------------------------------------------------------------
 
             var allServicesHtml = $("#ServiceId").html();
             var allTrainersHtml = $("#TrainerId").html();

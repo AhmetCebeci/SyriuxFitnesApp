@@ -1,77 +1,111 @@
 ﻿@model IEnumerable<SyriuxFitnesApp.Models.Appointment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Randevu Yönetimi";
 }
 
-<h1>Index</h1>
+<div class="container-fluid pt-4 px-4">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AppointmentDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AppointmentTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsApproved)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StoredPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StoredDuration)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Member)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Trainer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Service)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppointmentDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppointmentTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsApproved)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StoredPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StoredDuration)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Member.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Trainer.Expertise)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Service.ServiceName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AppointmentId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AppointmentId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AppointmentId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="bg-white rounded h-100 p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h6 class="mb-0 fs-4">Randevu Yönetimi</h6>
+                <small class="text-muted">Üyelerin aldığı tüm randevuları buradan yönetebilirsiniz.</small>
+            </div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Manuel Randevu Oluştur
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tarih / Saat</th>
+                        <th>Üye Bilgisi</th>
+                        <th>Hizmet & Antrenör</th>
+                        <th>Durum</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderBy(x => x.IsApproved).ThenByDescending(x => x.AppointmentDate))
+                    {
+                        <tr class="@(item.IsApproved ? "" : "table-warning")">
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">@item.AppointmentDate.ToString("dd.MM.yyyy")</span>
+                                    <small class="text-muted"><i class="bi bi-clock"></i> @item.AppointmentTime</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 40px; height: 40px;">
+                                        @(item.Member?.FullName?.Substring(0, 1) ?? "?")
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="fw-bold mb-0">@item.Member?.FullName</p>
+                                        <small class="text-muted">@item.Member?.Email</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark mb-1">@item.Service?.ServiceName</span>
+                                <br />
+                                <small class="text-muted"><i class="bi bi-person-badge"></i> @item.Trainer?.FullName</small>
+                            </td>
+                            <td>
+                                @if (item.IsApproved)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Onaylandı</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Onay Bekliyor</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+
+                                    @if (!item.IsApproved)
+                                    {
+                                        <form asp-action="Approve" asp-route-id="@item.AppointmentId" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success" title="Randevuyu Onayla">
+                                                <i class="bi bi-check-lg"></i> Onayla
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <a asp-action="Edit" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-outline-primary" title="Düzenle">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+                                    <a asp-action="Delete" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-outline-danger" title="Sil / İptal Et">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <p>Henüz sistemde kayıtlı randevu bulunmamaktadır.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

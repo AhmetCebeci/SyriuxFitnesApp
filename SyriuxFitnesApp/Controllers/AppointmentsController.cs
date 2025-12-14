@@ -119,13 +119,13 @@ namespace SyriuxFitnesApp.Controllers
                     // Bitiş saatini hesapla (Başlangıç + Ders Süresi)
                     TimeSpan endTime = selectedTime.Add(TimeSpan.FromMinutes(selectedService.DurationMinutes));
 
-                    // 1. Salon Saati Kontrolü 
-                    if (salon != null)
+                    // 1. Salon Saati Kontrolü (Eğer salon ayarı yoksa varsayılan 09:00-22:00 kabul et)
+                    TimeSpan salonOpen = salon != null ? salon.OpeningTime : new TimeSpan(9, 0, 0);
+                    TimeSpan salonClose = salon != null ? salon.ClosingTime : new TimeSpan(22, 0, 0);
+
+                    if (selectedTime < salonOpen || endTime > salonClose)
                     {
-                        if (selectedTime < salon.OpeningTime || endTime > salon.ClosingTime)
-                        {
-                            ModelState.AddModelError("", $"Salon çalışma saatleri ({salon.OpeningTime:hh\\:mm} - {salon.ClosingTime:hh\\:mm}) dışındasınız.");
-                        }
+                        ModelState.AddModelError("", $"Salon çalışma saatleri ({salonOpen:hh\\:mm} - {salonClose:hh\\:mm}) dışındasınız.");
                     }
 
                     // 2. Hoca Mesai Kontrolü
@@ -262,7 +262,11 @@ namespace SyriuxFitnesApp.Controllers
             var service = await _context.Services.FindAsync(serviceId);
             var salon = await _context.Salons.FirstOrDefaultAsync();
 
-            if (trainer == null || service == null || salon == null) return Json(new List<string>());
+            // Eğer veritabanında salon kaydı yoksa varsayılan saatleri kullan (Örn: 09:00 - 22:00)
+            TimeSpan salonOpen = salon != null ? salon.OpeningTime : new TimeSpan(9, 0, 0);
+            TimeSpan salonClose = salon != null ? salon.ClosingTime : new TimeSpan(22, 0, 0);
+
+            if (trainer == null || service == null) return Json(new List<string>());
 
             // O günkü mevcut randevuları çek
             var appointments = await _context.Appointments
@@ -273,8 +277,8 @@ namespace SyriuxFitnesApp.Controllers
 
             // Başlangıç ve Bitiş aralığını belirle (Hoca mesaisi ve Salon saatlerinin kesişimi)
             // Örn: Salon 09:00, Hoca 10:00 başlıyorsa -> Başlangıç 10:00
-            TimeSpan start = (trainer.WorkStartHour > salon.OpeningTime) ? trainer.WorkStartHour : salon.OpeningTime;
-            TimeSpan end = (trainer.WorkEndHour < salon.ClosingTime) ? trainer.WorkEndHour : salon.ClosingTime;
+            TimeSpan start = (trainer.WorkStartHour > salonOpen) ? trainer.WorkStartHour : salonOpen;
+            TimeSpan end = (trainer.WorkEndHour < salonClose) ? trainer.WorkEndHour : salonClose;
 
             // Döngü ile saatleri kontrol et (15'er dakika arayla)
             TimeSpan current = start;

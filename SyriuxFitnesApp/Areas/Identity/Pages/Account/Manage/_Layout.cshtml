@@ -1,11 +1,12 @@
 ﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
     {
         Layout = parentLayout.ToString();
     }
     else
     {
-        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+        // DEĞİŞİKLİK BURADA: Artık senin ana menülü Layout dosyanı kullanacak.
+        Layout = "~/Views/Shared/_Layout.cshtml";
     }
 }
 

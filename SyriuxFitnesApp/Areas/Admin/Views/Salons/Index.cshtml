@@ -5,7 +5,7 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-8">
 
         @if (TempData["SuccessMessage"] != null)
         {
@@ -15,11 +15,19 @@
             </div>
         }
 
+        <div class="alert alert-warning border-start border-warning border-5 shadow-sm">
+            <h5 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Dikkat!</h5>
+            <p class="mb-0">
+                Salon çalışma saatlerinde yapacağınız değişiklikler, <strong>yalnızca bundan sonra alınacak yeni randevular</strong> için geçerli olacaktır.
+                <br />
+                Mevcut (daha önce alınmış) randevular bu değişiklikten <u>etkilenmez</u> ve iptal edilmez.
+            </p>
+        </div>
         <div class="card shadow">
             <div class="card-header bg-dark text-white">
                 <h4 class="mb-0"><i class="bi bi-gear-fill"></i> Genel Salon Ayarları</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body bg-light">
                 <form asp-action="Index" method="post">
                     <input type="hidden" asp-for="Id" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -45,7 +53,7 @@
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
                             <i class="bi bi-save"></i> Ayarları Kaydet
                         </button>
                     </div>

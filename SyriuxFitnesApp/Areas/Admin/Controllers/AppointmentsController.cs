@@ -84,14 +84,20 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var appointment = await _context.Appointments.FindAsync(id);
+            // İsimleri görebilmek için Include eklendi
+            var appointment = await _context.Appointments
+                .Include(a => a.Member)
+                .Include(a => a.Service)
+                .FirstOrDefaultAsync(m => m.AppointmentId == id);
+
             if (appointment == null)
             {
                 return NotFound();
             }
             ViewData["MemberId"] = new SelectList(_context.Users, "Id", "Id", appointment.MemberId);
             ViewData["ServiceId"] = new SelectList(_context.Services, "ServiceId", "ServiceName", appointment.ServiceId);
-            ViewData["TrainerId"] = new SelectList(_context.Trainers, "TrainerId", "Expertise", appointment.TrainerId);
+            // Trainer listesinde isim soyisim görünmesi için "FullName" seçildi
+            ViewData["TrainerId"] = new SelectList(_context.Trainers, "TrainerId", "FullName", appointment.TrainerId);
             return View(appointment);
         }
 
@@ -168,6 +174,26 @@ namespace SyriuxFitnesApp.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        //  ONAYLAMA ---
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            appointment.IsApproved = true;
+            _context.Update(appointment);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Randevu başarıyla onaylandı.";
+            return RedirectToAction(nameof(Index));
+        }
+        // -------------
 
         private bool AppointmentExists(int id)
         {

@@ -1,69 +1,74 @@
 ﻿@model SyriuxFitnesApp.Models.Appointment
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Randevu Sil";
 }
 
-<h1>Delete</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Randevu Silme Onayı</h4>
+                </div>
+                <div class="card-body">
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Appointment</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AppointmentDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AppointmentDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AppointmentTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AppointmentTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsApproved)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsApproved)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StoredPrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StoredPrice)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StoredDuration)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StoredDuration)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Member)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Member.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Trainer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Trainer.Expertise)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Service)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Service.ServiceName)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="AppointmentId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+                    <h5 class="card-title text-center mb-4">
+                        Bu randevuyu kalıcı olarak silmek üzeresiniz.
+                    </h5>
+
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill fs-3 me-3"></i>
+                        <div>
+                            <strong>DİKKAT:</strong><br>
+                            Bu işlem geri alınamaz. Randevu sistemden tamamen kaldırılacaktır.
+                        </div>
+                    </div>
+
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">
+                            <span class="fw-bold">Tarih / Saat:</span>
+                            @Model.AppointmentDate.ToString("dd.MM.yyyy") - @Model.AppointmentTime
+                        </li>
+                        <li class="list-group-item">
+                            <span class="fw-bold">Üye:</span>
+                            @(Model.Member?.FullName ?? "Bilinmiyor")
+                        </li>
+                        <li class="list-group-item">
+                            <span class="fw-bold">Hizmet:</span>
+                            @(Model.Service?.ServiceName ?? "Bilinmiyor")
+                        </li>
+                        <li class="list-group-item">
+                            <span class="fw-bold">Antrenör:</span>
+                            @(Model.Trainer?.FullName ?? "Bilinmiyor")
+                        </li>
+                        <li class="list-group-item">
+                            <span class="fw-bold">Durum:</span>
+                            @if (Model.IsApproved)
+                            {
+                                <span class="badge bg-success">Onaylı</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Onay Bekliyor</span>
+                            }
+                        </li>
+                    </ul>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="AppointmentId" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> İptal Et
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash-fill"></i> Evet, Randevuyu Sil
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

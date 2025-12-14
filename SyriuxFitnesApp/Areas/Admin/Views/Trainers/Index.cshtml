@@ -51,7 +51,7 @@
                                 }
                             </td>
                             <td>
-                                <i class="bi bi-clock"></i> @item.WorkStartHour:00 - @item.WorkEndHour:00
+                                <i class="bi bi-clock"></i> @item.WorkStartHour.ToString(@"hh\:mm") - @item.WorkEndHour.ToString(@"hh\:mm")
                             </td>
                             <td class="text-end">
                                 <a asp-action="Edit" asp-route-id="@item.TrainerId" class="btn btn-sm btn-outline-warning me-2">

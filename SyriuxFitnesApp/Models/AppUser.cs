@@ -42,5 +42,8 @@ namespace SyriuxFitnesApp.Models
         [Required(ErrorMessage = "Bir hedef belirlemelisiniz (Örn: Kilo Verme,Hacim Kazanma vs).")]
         [StringLength(100, ErrorMessage = "Hedef açıklaması çok uzun.")]
         public string? FitnessGoal { get; set; } // Örn: Kilo Verme, Hacim Kazanma vs.
+
+        // Veritabanına kaydedilmez, sadece kod içinde Ad ve Soyadı birleştirip gösterir.
+        public string FullName => $"{FirstName} {LastName}";
     }
 }

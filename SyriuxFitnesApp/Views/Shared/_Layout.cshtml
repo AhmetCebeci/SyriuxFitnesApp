@@ -27,10 +27,12 @@
                         @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Appointments" asp-action="Index">Randevularım</a>
+                               
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Appointments" asp-action="Index">Randevularım</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-success fw-bold" asp-controller="Appointments" asp-action="Create">+ Randevu Al</a>
+                                
+                                <a class="nav-link text-success fw-bold" asp-area="" asp-controller="Appointments" asp-action="Create">+ Randevu Al</a>
                             </li>
                         }
                     </ul>

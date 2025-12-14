@@ -1,69 +1,89 @@
 ﻿@model SyriuxFitnesApp.Models.Appointment
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Randevu Düzenle";
 }
 
-<h1>Edit</h1>
+<div class="container-fluid pt-4 px-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="bg-white rounded h-100 p-4 shadow-sm">
 
-<h4>Appointment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="AppointmentId" />
-            <div class="form-group">
-                <label asp-for="AppointmentDate" class="control-label"></label>
-                <input asp-for="AppointmentDate" class="form-control" />
-                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="mb-0 fs-4 text-primary"><i class="bi bi-pencil-square"></i> Randevu Düzenle</h6>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Listeye Dön
+                    </a>
+                </div>
+
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <input type="hidden" asp-for="AppointmentId" />
+                    <input type="hidden" asp-for="MemberId" />
+                    <input type="hidden" asp-for="ServiceId" /> <input type="hidden" asp-for="StoredPrice" />
+                    <input type="hidden" asp-for="StoredDuration" />
+
+                    <div class="alert alert-light border mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Randevu Sahibi (Üye)</small>
+                                <span class="fw-bold fs-5">
+                                    @(Model.Member?.FullName ?? "Üye Bilgisi Yüklenemedi")
+                                </span>
+                            </div>
+                            <div class="col-md-6 border-start">
+                                <small class="text-muted d-block">Alınan Hizmet</small>
+                                <span class="fw-bold fs-5 text-success">
+                                    @(Model.Service?.ServiceName ?? "Hizmet Bilgisi Yok")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="AppointmentDate" class="form-label fw-bold">Tarih</label>
+                            <input asp-for="AppointmentDate" class="form-control" type="date"
+                                   value="@Model.AppointmentDate.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="AppointmentTime" class="form-label fw-bold">Saat</label>
+                            <input asp-for="AppointmentTime" class="form-control" type="time" />
+                            <span asp-validation-for="AppointmentTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="TrainerId" class="form-label fw-bold">Antrenör</label>
+                            <select asp-for="TrainerId" class="form-select" asp-items="ViewBag.TrainerId"></select>
+                            <span asp-validation-for="TrainerId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch p-3 border rounded bg-light mt-2">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="IsApproved" style="transform: scale(1.3);">
+                                <label class="form-check-label fw-bold" asp-for="IsApproved">
+                                    Bu Randevuyu Onayla
+                                </label>
+                                <div class="form-text ms-1">İşaretlenirse randevu "Onaylandı" statüsüne geçer.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Değişiklikleri Kaydet
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label asp-for="AppointmentTime" class="control-label"></label>
-                <input asp-for="AppointmentTime" class="form-control" />
-                <span asp-validation-for="AppointmentTime" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsApproved" /> @Html.DisplayNameFor(model => model.IsApproved)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="StoredPrice" class="control-label"></label>
-                <input asp-for="StoredPrice" class="form-control" />
-                <span asp-validation-for="StoredPrice" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StoredDuration" class="control-label"></label>
-                <input asp-for="StoredDuration" class="form-control" />
-                <span asp-validation-for="StoredDuration" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MemberId" class="control-label"></label>
-                <select asp-for="MemberId" class="form-control" asp-items="ViewBag.MemberId"></select>
-                <span asp-validation-for="MemberId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TrainerId" class="control-label"></label>
-                <select asp-for="TrainerId" class="form-control" asp-items="ViewBag.TrainerId"></select>
-                <span asp-validation-for="TrainerId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ServiceId" class="control-label"></label>
-                <select asp-for="ServiceId" class="form-control" asp-items="ViewBag.ServiceId"></select>
-                <span asp-validation-for="ServiceId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
