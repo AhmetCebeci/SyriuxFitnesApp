@@ -13,13 +13,14 @@ namespace SyriuxFitnesApp.Controllers
     public class AIController : Controller
     {
         private readonly UserManager<AppUser> _userManager;
+        // 1. Ayarları okuyabilmek için Configuration servisini tanımlıyoruz
+        private readonly IConfiguration _configuration;
 
-        // SENİN API KEYİN (Kodun içinde tanımlı)
-        private const string ApiKey = "AIzaSyBQ6gAZqGsDyrhq4etWdZ5Tkbk2ip84_zc";
-
-        public AIController(UserManager<AppUser> userManager)
+        // 2. Constructor (Yapıcı Metot) içine IConfiguration ekliyoruz
+        public AIController(UserManager<AppUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -62,27 +63,29 @@ namespace SyriuxFitnesApp.Controllers
         // --- RESMİ GOOGLE.GENAI SDK KULLANAN METOT ---
         private async Task<string> CallGoogleGeminiSDK(string prompt, string type)
         {
-            if (string.IsNullOrEmpty(ApiKey))
+            // 3. API Key'i kodun içinden değil, secrets.json'dan çekiyoruz
+            // "Google:ApiKey" ismini secrets.json dosyamda verdiğim isimle aynı yaptım.
+            string apiKey = _configuration["Google:ApiKey"];
+
+            if (string.IsNullOrEmpty(apiKey))
             {
                 await Task.Delay(1000);
-                return GetDemoData(type) + "<br><div class='alert alert-info'>Demo Modu (Key Girilmedi)</div>";
+                // Key yoksa sessizce demo moduna geçer
+                return GetDemoData(type);
             }
 
             try
             {
                 // 1. İSTEMCİYİ OLUŞTUR
-                var client = new Google.GenAI.Client(apiKey: ApiKey);
+                var client = new Google.GenAI.Client(apiKey: apiKey);
 
                 // 2. İSTEĞİ GÖNDER (Model: gemini-2.5-flash)
-                // C# SDK'sında contents parametresi string kabul edebilir.
                 var response = await client.Models.GenerateContentAsync(
                     model: "gemini-2.5-flash",
                     contents: prompt
                 );
 
-                // 3. CEVABI AL (HATA ÇÖZÜMÜ BURADA)
-                // Hata veren 'response.Text' yerine SDK'nın gerçek yolunu kullanıyoruz:
-                // Candidates -> [0] -> Content -> Parts -> [0] -> Text
+                // 3. CEVABI AL
                 string textResponse = "";
 
                 if (response?.Candidates != null && response.Candidates.Count > 0)
@@ -102,11 +105,10 @@ namespace SyriuxFitnesApp.Controllers
                 // Temizlik
                 return textResponse.Replace("```html", "").Replace("```", "").Trim();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Hata olursa (Örn: Model bulunamazsa veya kota biterse) DEMO veriyi göster.
-                string errorHtml = $"<div class='alert alert-warning mt-3 border-danger'><i class='bi bi-exclamation-circle'></i> <strong>Yapay Zeka Hatası:</strong><br>{ex.Message}<br><em>(Sistem demo modunda yanıt veriyor)</em></div>";
-                return GetDemoData(type) + errorHtml;
+                // Hata durumunda sessizce demo verisine düşer.
+                return GetDemoData(type);
             }
         }
 

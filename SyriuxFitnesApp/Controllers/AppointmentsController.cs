@@ -253,7 +253,9 @@ namespace SyriuxFitnesApp.Controllers
             return Json(trainers);
         }
 
-        // 3. Müsait Saatleri Getir  REST API KISMI)
+
+        //REST API KISMI
+        // 3. Müsait Saatleri Getir  
         [HttpGet]
         public async Task<JsonResult> GetAvailableHours(int trainerId, int serviceId, DateTime date)
         {

@@ -61,9 +61,10 @@
                 <span asp-validation-for="Input.Gender" class="text-danger"></span>
             </div>
 
-            <div class="form-floating mb-3">
-                <select asp-for="Input.FitnessGoal" class="form-select">
-                    <option value="">Fitness Hedefiniz Nedir?</option>
+            <div class="mb-3">
+                <label asp-for="Input.FitnessGoal" class="form-label">Fitness Hedefi (Listeden Seçiniz)</label>
+                <select asp-for="Input.FitnessGoal" class="form-select" size="5" aria-label="Fitness Hedefi">
+                    <option value="">Hedef Seçiniz...</option>
                     <option value="Kilo Verme">Kilo Verme (Yağ Yakımı)</option>
                     <option value="Hacim Kazanma">Hacim Kazanma (Kas Kütlesi)</option>
                     <option value="Güç ve Kuvvet">Güç ve Kuvvet (Powerlifting)</option>
@@ -80,10 +81,8 @@
                     <option value="Beslenme Odaklı">Beslenme ve Diyet Odaklı</option>
                     <option value="Yeni Başlayan">Spora Yeni Başlayan (Adaptasyon)</option>
                 </select>
-                <label asp-for="Input.FitnessGoal">Fitness Hedefi</label>
                 <span asp-validation-for="Input.FitnessGoal" class="text-danger"></span>
             </div>
-
             <hr class="my-4" />
 
             <div class="form-floating mb-3">
