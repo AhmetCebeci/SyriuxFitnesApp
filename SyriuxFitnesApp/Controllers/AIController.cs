@@ -32,22 +32,22 @@ namespace SyriuxFitnesApp.Controllers
         [Route("GetAdvice")]
         public async Task<IActionResult> GetAdvice(string adviceType, IFormFile userImage)
         {
-            // 1. Kullanıcı Kontrolü
-            var user = await _userManager.GetUserAsync(User);
+            // 1. Kullanıcı Kontrolü
+            var user = await _userManager.GetUserAsync(User);
             if (user == null) return Json(new { success = false, message = "Kullanıcı bulunamadı." });
 
-            // 2. Fotoğraf Kontrolü
-            if (userImage == null || userImage.Length == 0)
+            // 2. Fotoğraf Kontrolü
+            if (userImage == null || userImage.Length == 0)
             {
                 return Json(new { success = false, message = "Lütfen fotoğrafınızı yükleyin." });
             }
 
-            // 3. Gemini'den Program Al
-            string prompt = PreparePrompt(user, adviceType);
+            // 3. Gemini'den Program Al
+            string prompt = PreparePrompt(user, adviceType);
             var aiResult = await CallGoogleGeminiSDK(prompt, adviceType);
 
-            // 4. ÜCRETSİZ Resim Üret (Pollinations.ai)
-            string finalImage = null;
+            // 4. ÜCRETSİZ Resim Üret (Pollinations.ai)
+            string finalImage = null;
             string debugError = aiResult.ErrorMessage;
 
             if (!aiResult.IsDemo && !string.IsNullOrEmpty(aiResult.ImagePrompt))
@@ -75,33 +75,47 @@ namespace SyriuxFitnesApp.Controllers
         {
             string gender = user.Gender ?? "Sporcu";
             string goal = user.FitnessGoal ?? "Form Tutma";
-            string duration = type == "workout" ? "6 ay" : "2 ay";
             string context = type == "workout" ? "Antrenman" : "Diyet";
 
-            return $@"
-            Sen uzman bir antrenörsün. Danışan: {gender}, {user.Height}cm, {user.Weight}kg, Hedef: {goal}.
-            
-            GÖREV 1: Bu kişiye uygun {context} programı hazırla.
-            Cevabı SADECE HTML formatında (ul, li, strong, h5 vb.) ver.
+            // Vücut Tipi Ayarı
+            string bodyLook = type == "workout"
+                ? "fit athletic body, muscle definition, toned arms, strong physique"
+                : "slim fit body, lean waist, flat stomach, healthy look";
 
-            GÖREV 2: Bu kişinin programı uyguladıktan sonra ({duration} sonra) nasıl görüneceğini hayal et.
-            Cevabın en altına '|||' işareti koy ve devamına bu hayali resmetmek için net bir İNGİLİZCE IMAGE PROMPT yaz.
-            
-            ÖRNEK FORMAT:
-            <h5>Program</h5>
-            <ul><li>...</li></ul>
-            |||
-            Full body photo of a fit {gender}, athletic physique, confident pose, gym background, professional lighting
-            ";
+            return $@"
+            Sen uzman bir antrenörsün. Danışan: {gender}, {user.Height}cm, {user.Weight}kg.
+            
+            GÖREV 1 (GİZLİ ANALİZ): 
+            Ekteki fotoğrafı incele ve yüz detaylarını (saç, göz, ten rengi, yüz şekli) analiz et.
+            DİKKAT: BU ANALİZİ CEVAP METNİNE ASLA YAZMA! Bunu sadece aşağıdaki Image Prompt'u yazarken kullanacaksın.
+
+            GÖREV 2 (GÖRÜNÜR ÇIKTI): 
+            Kişiye uygun {context} programını hazırla.
+            Cevabın DOĞRUDAN <h5> etiketi ile başlasın. Başka hiçbir giriş cümlesi kurma.
+
+            GÖREV 3 (RESİM KOMUTU):
+            Cevabın en altına '|||' koy ve İngilizce prompt yaz.
+            Promptun başına analiz ettiğin yüz detaylarını ekle.
+            
+            PROMPT FORMÜLÜ:
+            (Detailed portrait of a [CİNSİYET] with [YÜZ ANALİZİNDEKİ DETAYLAR]), ({bodyLook}), (gym background), (hyperrealistic), (8k)
+            
+            ÖRNEK CEVAP FORMATI (BUNA UY):
+            <h5>Program</h5>
+            <ul><li>...</li></ul>
+            |||
+            Detailed portrait of a turkish woman with long curly hair, round face, {bodyLook}, gym background, 8k.
+            ";
         }
 
-        // ÜCRETSİZ RESİM ÜRETİMİ - Pollinations.ai
-        private async Task<string?> GenerateImageWithPollinations(string prompt)
+        // ÜCRETSİZ RESİM ÜRETİMİ - Pollinations.ai
+        private async Task<string?> GenerateImageWithPollinations(string prompt)
         {
             try
             {
+                int randomSeed = new Random().Next(0, 999999);
                 string encodedPrompt = Uri.EscapeDataString(prompt);
-                string imageUrl = $"https://image.pollinations.ai/prompt/{encodedPrompt}?width=512&height=512&nologo=true";
+                string imageUrl = $"https://image.pollinations.ai/prompt/{encodedPrompt}?width=512&height=512&nologo=true&seed={randomSeed}&model=flux";
 
                 var response = await _httpClient.GetAsync(imageUrl);
 
@@ -113,7 +127,6 @@ namespace SyriuxFitnesApp.Controllers
                         return Convert.ToBase64String(imageBytes);
                     }
                 }
-
                 return null;
             }
             catch
@@ -141,7 +154,8 @@ namespace SyriuxFitnesApp.Controllers
             try
             {
                 var client = new Google.GenAI.Client(apiKey: apiKey);
-                var response = await client.Models.GenerateContentAsync("gemini-2.5-flash", prompt);
+                // "gemini-2.0-flash" en güncel ve hızlı olanı.
+                var response = await client.Models.GenerateContentAsync("gemini-2.0-flash", prompt);
 
                 string textResponse = "";
                 if (response?.Candidates != null && response.Candidates.Count > 0)
@@ -152,6 +166,16 @@ namespace SyriuxFitnesApp.Controllers
                 if (string.IsNullOrEmpty(textResponse)) throw new Exception("Yapay zeka boş cevap döndü.");
 
                 string cleanText = textResponse.Replace("```html", "").Replace("```", "").Trim();
+
+                // --- EKRAN TEMİZLİĞİ YAPAN KISIM BURASI ---
+                // Eğer Gemini laf dinlemez ve en başa analiz yazarsa, biz onu programatik olarak sileriz.
+                // Metin nerede "<h5>" ile başlıyorsa öncesini çöpe atıyoruz.
+                int htmlStartIndex = cleanText.IndexOf("<h5>");
+                if (htmlStartIndex > 0)
+                {
+                    cleanText = cleanText.Substring(htmlStartIndex);
+                }
+                // ------------------------------------------
 
                 if (cleanText.Contains("|||"))
                 {
@@ -177,24 +201,23 @@ namespace SyriuxFitnesApp.Controllers
             if (type == "workout")
             {
                 return @"<div class='alert alert-warning'>Demo Modu (Hata oluştu)</div>
-                         <h5>Örnek Antrenman Programı</h5>
-                         <ul>
-                             <li><strong>Pazartesi:</strong> Göğüs - Bench Press 3x10, Push-ups 3x15</li>
-                             <li><strong>Çarşamba:</strong> Sırt - Pull-ups 3x8, Rows 3x12</li>
-                             <li><strong>Cuma:</strong> Bacak - Squats 3x12, Lunges 3x10</li>
-                         </ul>";
+                         <h5>Örnek Antrenman Programı</h5>
+                         <ul>
+                             <li><strong>Pazartesi:</strong> Göğüs - Bench Press 3x10, Push-ups 3x15</li>
+                             <li><strong>Çarşamba:</strong> Sırt - Pull-ups 3x8, Rows 3x12</li>
+                             <li><strong>Cuma:</strong> Bacak - Squats 3x12, Lunges 3x10</li>
+                         </ul>";
             }
             else
             {
                 return @"<div class='alert alert-warning'>Demo Modu (Hata oluştu)</div>
-                         <h5>Örnek Diyet Programı</h5>
-                         <ul>
-                             <li><strong>Sabah:</strong> Yulaf ezmesi + süt + meyve</li>
-                             <li><strong>Öğle:</strong> Tavuk göğüs + salata + pilav</li>
-                             <li><strong>Akşam:</strong> Balık + sebze + yoğurt</li>
-                         </ul>";
+                         <h5>Örnek Diyet Programı</h5>
+                         <ul>
+                             <li><strong>Sabah:</strong> Yulaf ezmesi + süt + meyve</li>
+                             <li><strong>Öğle:</strong> Tavuk göğüs + salata + pilav</li>
+                             <li><strong>Akşam:</strong> Balık + sebze + yoğurt</li>
+                         </ul>";
             }
         }
     }
 }
-
