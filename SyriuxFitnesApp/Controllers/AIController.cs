@@ -2,9 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SyriuxFitnesApp.Models;
-// Google GenAI Resmi Kütüphanesi
 using Google.GenAI;
-using Google.GenAI.Types;
+using System.Text.Json;
 
 namespace SyriuxFitnesApp.Controllers
 {
@@ -13,10 +12,9 @@ namespace SyriuxFitnesApp.Controllers
     public class AIController : Controller
     {
         private readonly UserManager<AppUser> _userManager;
-        // 1. Ayarları okuyabilmek için Configuration servisini tanımlıyoruz
         private readonly IConfiguration _configuration;
+        private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
-        // 2. Constructor (Yapıcı Metot) içine IConfiguration ekliyoruz
         public AIController(UserManager<AppUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
@@ -32,121 +30,171 @@ namespace SyriuxFitnesApp.Controllers
 
         [HttpPost]
         [Route("GetAdvice")]
-        public async Task<IActionResult> GetAdvice(string adviceType)
+        public async Task<IActionResult> GetAdvice(string adviceType, IFormFile userImage)
         {
-            var user = await _userManager.GetUserAsync(User);
+            // 1. Kullanıcı Kontrolü
+            var user = await _userManager.GetUserAsync(User);
             if (user == null) return Json(new { success = false, message = "Kullanıcı bulunamadı." });
 
-            string prompt = PreparePrompt(user, adviceType);
+            // 2. Fotoğraf Kontrolü
+            if (userImage == null || userImage.Length == 0)
+            {
+                return Json(new { success = false, message = "Lütfen fotoğrafınızı yükleyin." });
+            }
 
-            // Yeni SDK ile Gemini 2.5 çağıran fonksiyon
-            string result = await CallGoogleGeminiSDK(prompt, adviceType);
+            // 3. Gemini'den Program Al
+            string prompt = PreparePrompt(user, adviceType);
+            var aiResult = await CallGoogleGeminiSDK(prompt, adviceType);
 
-            return Json(new { success = true, content = result });
+            // 4. ÜCRETSİZ Resim Üret (Pollinations.ai)
+            string finalImage = null;
+            string debugError = aiResult.ErrorMessage;
+
+            if (!aiResult.IsDemo && !string.IsNullOrEmpty(aiResult.ImagePrompt))
+            {
+                try
+                {
+                    finalImage = await GenerateImageWithPollinations(aiResult.ImagePrompt);
+                }
+                catch (Exception ex)
+                {
+                    debugError = (debugError ?? "") + " | Resim Hatası: " + ex.Message;
+                }
+            }
+
+            return Json(new
+            {
+                success = true,
+                content = aiResult.Content,
+                generatedImage = finalImage,
+                debugError = debugError
+            });
         }
 
         private string PreparePrompt(AppUser user, string type)
         {
-            string gender = user.Gender ?? "Belirtilmemiş";
-            string goal = user.FitnessGoal ?? "Sağlıklı Yaşam";
+            string gender = user.Gender ?? "Sporcu";
+            string goal = user.FitnessGoal ?? "Form Tutma";
+            string duration = type == "workout" ? "6 ay" : "2 ay";
+            string context = type == "workout" ? "Antrenman" : "Diyet";
 
-            if (type == "workout")
+            return $@"
+            Sen uzman bir antrenörsün. Danışan: {gender}, {user.Height}cm, {user.Weight}kg, Hedef: {goal}.
+            
+            GÖREV 1: Bu kişiye uygun {context} programı hazırla.
+            Cevabı SADECE HTML formatında (ul, li, strong, h5 vb.) ver.
+
+            GÖREV 2: Bu kişinin programı uyguladıktan sonra ({duration} sonra) nasıl görüneceğini hayal et.
+            Cevabın en altına '|||' işareti koy ve devamına bu hayali resmetmek için net bir İNGİLİZCE IMAGE PROMPT yaz.
+            
+            ÖRNEK FORMAT:
+            <h5>Program</h5>
+            <ul><li>...</li></ul>
+            |||
+            Full body photo of a fit {gender}, athletic physique, confident pose, gym background, professional lighting
+            ";
+        }
+
+        // ÜCRETSİZ RESİM ÜRETİMİ - Pollinations.ai
+        private async Task<string?> GenerateImageWithPollinations(string prompt)
+        {
+            try
             {
-                return $"Ben bir spor antrenörüyüm. Danışanım: {gender}, Boy: {user.Height}cm, Kilo: {user.Weight}kg, Hedef: {goal}. Bu kişiye uygun haftalık antrenman programı hazırla. Cevabı SADECE HTML formatında (ul, li, strong, h5 etiketleri ile) ver. Markdown kullanma. Asla ```html yazma. Başlıkları h5 ile yaz.";
+                string encodedPrompt = Uri.EscapeDataString(prompt);
+                string imageUrl = $"https://image.pollinations.ai/prompt/{encodedPrompt}?width=512&height=512&nologo=true";
+
+                var response = await _httpClient.GetAsync(imageUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                    if (imageBytes != null && imageBytes.Length > 0)
+                    {
+                        return Convert.ToBase64String(imageBytes);
+                    }
+                }
+
+                return null;
             }
-            else
+            catch
             {
-                return $"Ben bir diyetisyenim. Danışanım: {gender}, Boy: {user.Height}cm, Kilo: {user.Weight}kg, Hedef: {goal}. Günlük örnek beslenme programı (Kahvaltı, Öğle, Akşam, Ara öğün) hazırla. Cevabı SADECE HTML formatında (ul, li, strong, h5 etiketleri ile) ver. Markdown kullanma. Asla ```html yazma.";
+                return null;
             }
         }
 
-        // --- RESMİ GOOGLE.GENAI SDK KULLANAN METOT ---
-        private async Task<string> CallGoogleGeminiSDK(string prompt, string type)
+        private class GeminiResult
         {
-            // 3. API Key'i kodun içinden değil, secrets.json'dan çekiyoruz
-            // "Google:ApiKey" ismini secrets.json dosyamda verdiğim isimle aynı yaptım.
-            string apiKey = _configuration["Google:ApiKey"];
+            public string Content { get; set; }
+            public string ImagePrompt { get; set; }
+            public bool IsDemo { get; set; }
+            public string ErrorMessage { get; set; }
+        }
 
+        private async Task<GeminiResult> CallGoogleGeminiSDK(string prompt, string type)
+        {
+            string apiKey = _configuration["Google:ApiKey"];
             if (string.IsNullOrEmpty(apiKey))
             {
-                await Task.Delay(1000);
-                // Key yoksa sessizce demo moduna geçer
-                return GetDemoData(type);
+                return new GeminiResult { Content = GetDemoData(type), IsDemo = true, ErrorMessage = "Google API Key eksik." };
             }
 
             try
             {
-                // 1. İSTEMCİYİ OLUŞTUR
                 var client = new Google.GenAI.Client(apiKey: apiKey);
+                var response = await client.Models.GenerateContentAsync("gemini-2.5-flash", prompt);
 
-                // 2. İSTEĞİ GÖNDER (Model: gemini-2.5-flash)
-                var response = await client.Models.GenerateContentAsync(
-                    model: "gemini-2.5-flash",
-                    contents: prompt
-                );
-
-                // 3. CEVABI AL
                 string textResponse = "";
-
                 if (response?.Candidates != null && response.Candidates.Count > 0)
                 {
-                    var firstCandidate = response.Candidates[0];
-                    if (firstCandidate.Content?.Parts != null && firstCandidate.Content.Parts.Count > 0)
-                    {
-                        textResponse = firstCandidate.Content.Parts[0].Text;
-                    }
+                    textResponse = response.Candidates[0].Content?.Parts?[0]?.Text ?? "";
                 }
 
-                if (string.IsNullOrEmpty(textResponse))
+                if (string.IsNullOrEmpty(textResponse)) throw new Exception("Yapay zeka boş cevap döndü.");
+
+                string cleanText = textResponse.Replace("```html", "").Replace("```", "").Trim();
+
+                if (cleanText.Contains("|||"))
                 {
-                    throw new Exception("Yapay zeka boş cevap döndü.");
+                    var parts = cleanText.Split("|||", StringSplitOptions.RemoveEmptyEntries);
+                    return new GeminiResult { Content = parts[0].Trim(), ImagePrompt = parts.Length > 1 ? parts[1].Trim() : "", IsDemo = false };
                 }
 
-                // Temizlik
-                return textResponse.Replace("```html", "").Replace("```", "").Trim();
+                return new GeminiResult { Content = cleanText, ImagePrompt = "", IsDemo = false };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Hata durumunda sessizce demo verisine düşer.
-                return GetDemoData(type);
+                return new GeminiResult
+                {
+                    Content = GetDemoData(type),
+                    IsDemo = true,
+                    ErrorMessage = "Gemini Hatası: " + ex.Message
+                };
             }
         }
 
-        // --- DEMO VERİLERİ (Güvenlik Ağı) ---
         private string GetDemoData(string type)
         {
-            string html = "";
             if (type == "workout")
             {
-                html = @"
-                <div class='alert alert-success border-0 shadow-sm'>
-                    <i class='bi bi-activity'></i> <strong>Kişisel Antrenman Programınız Hazır!</strong>
-                </div>
-                <h5 class='text-primary mt-3'>Haftalık Plan Önerisi</h5>
-                <ul class='list-group list-group-flush'>
-                    <li class='list-group-item'><strong class='text-dark'>Pazartesi:</strong> Tüm Vücut (Squat, Push-up, Row) + 20dk Kardiyo.</li>
-                    <li class='list-group-item'><strong class='text-dark'>Salı:</strong> Dinlenme veya Hafif Yürüyüş (45 dk).</li>
-                    <li class='list-group-item'><strong class='text-dark'>Çarşamba:</strong> Alt Vücut Odaklı (Lunge, Deadlift) + Karın Egzersizleri.</li>
-                    <li class='list-group-item'><strong class='text-dark'>Perşembe:</strong> Aktif Dinlenme (Yoga/Esneme).</li>
-                    <li class='list-group-item'><strong class='text-dark'>Cuma:</strong> Üst Vücut (Omuz Press, Biceps Curl, Triceps).</li>
-                    <li class='list-group-item'><strong class='text-dark'>Hafta Sonu:</strong> Doğa yürüyüşü veya Yüzme.</li>
-                </ul>";
+                return @"<div class='alert alert-warning'>Demo Modu (Hata oluştu)</div>
+                         <h5>Örnek Antrenman Programı</h5>
+                         <ul>
+                             <li><strong>Pazartesi:</strong> Göğüs - Bench Press 3x10, Push-ups 3x15</li>
+                             <li><strong>Çarşamba:</strong> Sırt - Pull-ups 3x8, Rows 3x12</li>
+                             <li><strong>Cuma:</strong> Bacak - Squats 3x12, Lunges 3x10</li>
+                         </ul>";
             }
             else
             {
-                html = @"
-                <div class='alert alert-success border-0 shadow-sm'>
-                    <i class='bi bi-apple'></i> <strong>Kişisel Beslenme Programınız Hazır!</strong>
-                </div>
-                <h5 class='text-primary mt-3'>Günlük Beslenme Planı</h5>
-                <ul class='list-group list-group-flush'>
-                    <li class='list-group-item'><strong class='text-dark'>Kahvaltı:</strong> 2 Yumurta (Haşlanmış), 1 dilim tam buğday ekmeği, bol yeşillik, 5 zeytin.</li>
-                    <li class='list-group-item'><strong class='text-dark'>Öğle:</strong> Izgara Tavuk/Köfte (150gr), Salata (Az yağlı), 4 kaşık bulgur pilavı.</li>
-                    <li class='list-group-item'><strong class='text-dark'>İkindi:</strong> 1 kase yoğurt veya 1 bardak kefir.</li>
-                    <li class='list-group-item'><strong class='text-dark'>Akşam:</strong> Zeytinyağlı sebze yemeği (Kabak/Ispanak), Yoğurt. (Ekmek yok).</li>
-                </ul>";
+                return @"<div class='alert alert-warning'>Demo Modu (Hata oluştu)</div>
+                         <h5>Örnek Diyet Programı</h5>
+                         <ul>
+                             <li><strong>Sabah:</strong> Yulaf ezmesi + süt + meyve</li>
+                             <li><strong>Öğle:</strong> Tavuk göğüs + salata + pilav</li>
+                             <li><strong>Akşam:</strong> Balık + sebze + yoğurt</li>
+                         </ul>";
             }
-            return html;
         }
     }
 }
+
