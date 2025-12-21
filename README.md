@@ -46,27 +46,13 @@ Kullanıcılar fotoğraflarını yükleyip hedeflerini (Kilo Verme, Hacim Kazanm
 
 ---
 
-## 📸 Ekran Görüntüleri
-
-| Ana Sayfa | Yapay Zeka Analizi |
-|-----------|--------------------|
-| ![Home Page](https://via.placeholder.com/400x200?text=Ana+Sayfa+Gorseli) | ![AI Page](https://via.placeholder.com/400x200?text=AI+Analiz+Gorseli) |
-
-| Admin Paneli | Randevu Sistemi |
-|--------------|-----------------|
-| ![Admin Panel](https://via.placeholder.com/400x200?text=Admin+Paneli+Gorseli) | ![Booking](https://via.placeholder.com/400x200?text=Randevu+Ekrani+Gorseli) |
-
-*(Not: Ekran görüntüleri projenin çalışır halinden alınmıştır.)*
-
----
-
 ## ⚙️ Kurulum ve Çalıştırma
 
 Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin:
 
 1.  **Repoyu Klonlayın:**
     ```bash
-    git clone [https://github.com/KULLANICI_ADINIZ/SyriuxFitnessApp.git](https://github.com/KULLANICI_ADINIZ/SyriuxFitnessApp.git)
+    git clone [https://github.com/AhmetCebeci/SyriuxFitnessApp.git](https://github.com/AhmetCebeci/SyriuxFitnessApp.git)
     ```
 
 2.  **Veritabanını Yapılandırın:**
@@ -115,8 +101,4 @@ Proje ayağa kalktığında veritabanına otomatik olarak Admin kullanıcısı e
 * **Trainers & Services:** Eğitmen ve Hizmet bilgileri.
 * **TrainerServices:** Çoka-çok ilişki tablosu (Hangi hoca hangi dersi veriyor).
 
----
-
-### 📞 İletişim
-
-Ahmet Cebeci - [GitHub Profilim](https://github.com/KULLANICI_ADINIZ)
+Ahmet Cebeci - [GitHub Profilim](https://github.com/AhmetCebeci)
