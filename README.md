@@ -105,6 +105,7 @@ foreach (var existing in existingAppointments)
         throw new BusinessException("Antrenör bu saatte dolu!");
     }
 }
+```
 ## ⚙️ Kurulum Adımları
 
 Projeyi yerel ortamınızda çalıştırmak için:
