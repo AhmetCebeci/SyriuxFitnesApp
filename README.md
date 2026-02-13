@@ -105,11 +105,34 @@ foreach (var existing in existingAppointments)
         throw new BusinessException("Antrenör bu saatte dolu!");
     }
 }
+## ⚙️ Kurulum Adımları
 
-⚙️ Kurulum AdımlarıProjeyi yerel ortamınızda çalıştırmak için:Repoyu Klonlayın:Bashgit clone [https://github.com/AhmetCebeci/SyriuxFitnessApp.git](https://github.com/AhmetCebeci/SyriuxFitnessApp.git)
-Veritabanı Bağlantısını Yapılandırın:appsettings.json dosyasını açın ve SQL Server bağlantı cümlenizi güncelleyin.JSON"ConnectionStrings": {
-  "DefaultConnection": "Server=.;Database=SyriuxFitnessDB;Trusted_Connection=True;..."
-}
-API Anahtarını Ekleyin:Google AI Studio'dan aldığınız API anahtarını ilgili alana yapıştırın.JSON"Google": { "ApiKey": "AIzaSy_SIZIN_API_ANAHTARINIZ" }
-Veritabanını Oluşturun (Migration):Visual Studio "Package Manager Console" üzerinden komutu çalıştırın:PowerShellUpdate-Database
-Çalıştırın:Projeyi F5 ile başlatın. Varsayılan Admin hesabı veritabanı oluşurken (Seed Data) eklenecektir.🔐 Varsayılan HesaplarVeritabanı ilk oluştuğunda şu hesaplar otomatik tanımlanır:RolEmailŞifreAdminb231210077@sakarya.edu.trsauÜye(Kayıt ekranından oluşturulabilir)-🗺️ Gelecek Planları (Roadmap)[ ] Mobil Uygulama: Flutter ile geliştirilecek mobil arayüz için REST API'nin dışa açılması.[ ] Ödeme Sistemi: Iyzico veya Stripe entegrasyonu ile online randevu ödemesi.[ ] QR Kod: Salon girişlerinde QR kod ile check-in yapılması.[ ] Bildirimler: Randevu saati yaklaştığında Email/SMS bildirimi (SignalR).<div align="center">GeliştiriciAhmet CebeciGitHub Profilim | LinkedIn</div>
+Projeyi yerel ortamınızda çalıştırmak için:
+
+1.  **Repoyu Klonlayın:**
+    ```bash
+    git clone [https://github.com/AhmetCebeci/SyriuxFitnessApp.git](https://github.com/AhmetCebeci/SyriuxFitnessApp.git)
+    ```
+
+2.  **Veritabanı Bağlantısını Yapılandırın:**
+    `appsettings.json` dosyasını açın ve SQL Server bağlantı cümlenizi güncelleyin.
+    ```json
+    "ConnectionStrings": {
+      "DefaultConnection": "Server=.;Database=SyriuxFitnessDB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+    }
+    ```
+
+3.  **API Anahtarını Ekleyin:**
+    Google AI Studio'dan aldığınız API anahtarını ilgili alana yapıştırın.
+    ```json
+    "Google": { "ApiKey": "AIzaSy_SIZIN_API_ANAHTARINIZ" }
+    ```
+
+4.  **Veritabanını Oluşturun (Migration):**
+    Visual Studio "Package Manager Console" üzerinden komutu çalıştırın:
+    ```powershell
+    Update-Database
+    ```
+
+5.  **Çalıştırın:**
+    Projeyi `F5` ile başlatın. Varsayılan Admin hesabı veritabanı oluşurken (Seed Data) eklenecektir.
