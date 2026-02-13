@@ -105,34 +105,3 @@ foreach (var existing in existingAppointments)
         throw new BusinessException("Antrenör bu saatte dolu!");
     }
 }
-## ⚙️ Kurulum Adımları
-
-Projeyi yerel ortamınızda çalıştırmak için:
-
-1.  **Repoyu Klonlayın:**
-    ```bash
-    git clone [https://github.com/AhmetCebeci/SyriuxFitnessApp.git](https://github.com/AhmetCebeci/SyriuxFitnessApp.git)
-    ```
-
-2.  **Veritabanı Bağlantısını Yapılandırın:**
-    `appsettings.json` dosyasını açın ve SQL Server bağlantı cümlenizi güncelleyin.
-    ```json
-    "ConnectionStrings": {
-      "DefaultConnection": "Server=.;Database=SyriuxFitnessDB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
-    }
-    ```
-
-3.  **API Anahtarını Ekleyin:**
-    Google AI Studio'dan aldığınız API anahtarını ilgili alana yapıştırın.
-    ```json
-    "Google": { "ApiKey": "AIzaSy_SIZIN_API_ANAHTARINIZ" }
-    ```
-
-4.  **Veritabanını Oluşturun (Migration):**
-    Visual Studio "Package Manager Console" üzerinden komutu çalıştırın:
-    ```powershell
-    Update-Database
-    ```
-
-5.  **Çalıştırın:**
-    Projeyi `F5` ile başlatın. Varsayılan Admin hesabı veritabanı oluşurken (Seed Data) eklenecektir.
